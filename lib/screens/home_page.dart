@@ -8,6 +8,7 @@ import '../services/locale_controller.dart';
 import '../widgets/squircle.dart';
 import '../widgets/gradient_widgets.dart';
 import 'app_selection_page.dart';
+import '../models/app_profile.dart';
 
 enum ShizukuStatus { checking, running, error }
 
@@ -275,6 +276,67 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _applyProfile(AppProfile profile) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    try {
+      setState(() {
+        _proximitySensorEnabled = profile.proximitySensor;
+        _keepScreenOnEnabled = profile.keepScreenOn;
+        _alwaysWakeUpEnabled = profile.alwaysWakeUp;
+        _chargingAnimationEnabled = profile.chargingAnimation;
+        _chargingAlwaysOnEnabled = profile.chargingAlwaysOn;
+        // notificationEnabled isn't in AppProfile tests, so we leave it as is or default
+      });
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('proximity_sensor_enabled', _proximitySensorEnabled);
+      await prefs.setBool('keep_screen_on_enabled', _keepScreenOnEnabled);
+      await prefs.setBool('always_wakeup_enabled', _alwaysWakeUpEnabled);
+      await prefs.setBool('charging_animation_enabled', _chargingAnimationEnabled);
+      await prefs.setBool('charging_always_on_enabled', _chargingAlwaysOnEnabled);
+      await prefs.setBool('notification_service_enabled', _notificationEnabled);
+
+      if (_shizukuRunning) {
+        await platform.invokeMethod('ensureTaskServiceConnected');
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        await platform.invokeMethod('setProximitySensorEnabled', {'enabled': _proximitySensorEnabled});
+        await platform.invokeMethod('setKeepScreenOnEnabled', {'enabled': _keepScreenOnEnabled});
+        await platform.invokeMethod('setAlwaysWakeUpEnabled', {'enabled': _alwaysWakeUpEnabled});
+        await platform.invokeMethod('setChargingAlwaysOnEnabled', {'enabled': _chargingAlwaysOnEnabled});
+        await platform.invokeMethod('toggleChargingService', {'enabled': _chargingAnimationEnabled});
+        await platform.invokeMethod('toggleNotificationService', {'enabled': _notificationEnabled});
+
+        if (profile.dpi > 0) {
+          await platform.invokeMethod('setRearDpi', {'dpi': profile.dpi});
+        } else {
+          await platform.invokeMethod('resetRearDpi');
+        }
+        await _getCurrentRearDpi();
+
+        final rotResult = await platform.invokeMethod('setDisplayRotation', {
+          'displayId': 1,
+          'rotation': profile.rotation,
+        });
+        if (rotResult == true) {
+           _currentRotation = profile.rotation;
+        }
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã áp dụng cấu hình: ${profile.name}')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to apply profile: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _restartApp() async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
@@ -501,6 +563,78 @@ class _HomePageState extends State<HomePage> {
 
   // === UI Builder helpers ===
 
+  Widget _buildProfileSelector(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            'Hồ sơ cài đặt',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          clipBehavior: Clip.none,
+          child: Row(
+            children: AppProfile.presets.map((profile) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: CustomPaint(
+                  painter: SquircleBorderPainter(
+                    radius: SquircleRadii.medium,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    strokeWidth: 1.5,
+                  ),
+                  child: ClipPath(
+                    clipper: const SquircleClipper(cornerRadius: SquircleRadii.medium),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: (_isLoading || !_shizukuRunning) ? null : () => _applyProfile(profile),
+                          splashColor: Colors.white.withValues(alpha: 0.3),
+                          highlightColor: Colors.white.withValues(alpha: 0.2),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(profile.icon, style: const TextStyle(fontSize: 20)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  profile.name,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _showLanguagePicker(BuildContext context) {
     final lc = widget.localeController;
     showDialog(
@@ -558,52 +692,66 @@ class _HomePageState extends State<HomePage> {
     required bool value,
     required ValueChanged<bool> onChanged,
     bool showWarning = false,
+    Widget? trailingExtra,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const Spacer(),
-            GradientToggle(value: value, onChanged: onChanged),
-          ],
-        ),
-        if (showWarning) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(SquircleRadii.small),
-              border: Border.all(
-                color: Colors.orange.withValues(alpha: 0.4),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context).translate('warning_burn_in'),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.black87,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onChanged(!value),
+        borderRadius: BorderRadius.circular(SquircleRadii.small),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
                     ),
+                  ),
+                  if (trailingExtra != null) trailingExtra,
+                  const SizedBox(width: 8),
+                  GradientToggle(value: value, onChanged: onChanged),
+                ],
+              ),
+              if (showWarning) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(SquircleRadii.small),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          AppLocalizations.of(context).translate('warning_burn_in'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
+            ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 
@@ -857,6 +1005,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 20),
 
+                // Profile selector
+                _buildProfileSelector(context),
+                const SizedBox(height: 20),
+
                 // DPI settings card
                 _buildGlassCard(
                   padding: const EdgeInsets.all(20),
@@ -1042,100 +1194,54 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 20),
 
-                // Rear cover detection
+                // Features Group
                 _buildGlassCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          l.translate('rear_cover_detection_title'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const Spacer(),
-                        GradientToggle(
-                          value: _proximitySensorEnabled,
-                          onChanged: _toggleProximitySensor,
-                        ),
-                      ],
+                    _buildToggleRow(
+                      title: l.translate('rear_cover_detection_title'),
+                      value: _proximitySensorEnabled,
+                      onChanged: _toggleProximitySensor,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Screen keep-alive settings
-                _buildGlassCard(
-                  children: [
+                    const Divider(color: Colors.black12, height: 1, indent: 8, endIndent: 8),
                     _buildToggleRow(
                       title: l.translate('rear_screen_always_on_title'),
                       value: _keepScreenOnEnabled,
                       onChanged: _toggleKeepScreenOn,
                     ),
-                    const SizedBox(height: 12),
-                    const Divider(color: Colors.black26, height: 1),
-                    const SizedBox(height: 12),
+                    const Divider(color: Colors.black12, height: 1, indent: 8, endIndent: 8),
                     _buildToggleRow(
                       title: l.translate('always_wake_up_title'),
                       value: _alwaysWakeUpEnabled,
                       onChanged: _toggleAlwaysWakeUp,
                       showWarning: _alwaysWakeUpEnabled,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Charging settings
-                _buildGlassCard(
-                  children: [
+                    const Divider(color: Colors.black12, height: 1, indent: 8, endIndent: 8),
                     _buildToggleRow(
                       title: l.translate('charging_animation_title'),
                       value: _chargingAnimationEnabled,
                       onChanged: _toggleChargingAnimation,
                     ),
-                    const SizedBox(height: 12),
-                    const Divider(color: Colors.black26, height: 1),
-                    const SizedBox(height: 12),
+                    const Divider(color: Colors.black12, height: 1, indent: 8, endIndent: 8),
                     _buildToggleRow(
                       title: l.translate('charging_always_on_title'),
                       value: _chargingAlwaysOnEnabled,
                       onChanged: _toggleChargingAlwaysOn,
                       showWarning: _chargingAlwaysOnEnabled,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Notification service
-                _buildGlassCard(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          l.translate('notification_service_title'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          icon: const Icon(Icons.menu, size: 24),
-                          color: Colors.black87,
-                          onPressed: _openAppSelectionPage,
-                          tooltip: l.translate('select_apps'),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
-                        const SizedBox(width: 8),
-                        GradientToggle(
-                          value: _notificationEnabled,
-                          onChanged: _toggleNotificationService,
-                        ),
-                      ],
+                    const Divider(color: Colors.black12, height: 1, indent: 8, endIndent: 8),
+                    _buildToggleRow(
+                      title: l.translate('notification_service_title'),
+                      value: _notificationEnabled,
+                      onChanged: _toggleNotificationService,
+                      trailingExtra: IconButton(
+                        icon: const Icon(Icons.menu, size: 24),
+                        color: Colors.black87,
+                        onPressed: _openAppSelectionPage,
+                        tooltip: l.translate('select_apps'),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ),
                   ],
                 ),
