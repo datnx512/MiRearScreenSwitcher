@@ -904,6 +904,15 @@ public class MainActivity extends FlutterActivity {
                         break;
                     }
                     
+                    case "showRearClock": {
+                        // Launch the RearScreenClockActivity on the rear screen.
+                        // Follows the established pattern: start the activity on the
+                        // current display, then move its task to display 1 (rear).
+                        startClockOnRearScreen();
+                        result.success(true);
+                        break;
+                    }
+                    
                     default:
                         result.notImplemented();
                 }
@@ -921,6 +930,77 @@ public class MainActivity extends FlutterActivity {
         }
     }
     
+    /**
+     * Launch RearScreenClockActivity on the rear screen (display 1).
+     * Mirrors the proven notification launch flow: disable the official
+     * sub-screen launcher, wake the rear screen, start the activity, then
+     * move its task to display 1 via the activity_task service.
+     */
+    private void startClockOnRearScreen() {
+        if (taskService == null) {
+            Log.w(TAG, "TaskService not available for clock");
+            // Fallback: plain start (will appear on current display)
+            try {
+                Intent intent = new Intent(this, RearScreenClockActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to start clock activity (fallback)", e);
+            }
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                // Step 1: disable the official sub-screen launcher
+                taskService.disableSubScreenLauncher();
+
+                // Step 2: wake the rear screen
+                taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
+                Thread.sleep(50);
+
+                // Step 3: start the clock activity
+                String componentName = getPackageName() + "/" + RearScreenClockActivity.class.getName();
+                String startCmd = "am start -n " + componentName;
+                taskService.executeShellCommand(startCmd);
+
+                // Step 4: poll for the task id
+                String clockTaskId = null;
+                int attempts = 0;
+                int maxAttempts = 20;
+
+                while (clockTaskId == null && attempts < maxAttempts) {
+                    Thread.sleep(30);
+                    String res = taskService.executeShellCommandWithResult(
+                        "am stack list | grep RearScreenClockActivity");
+                    if (res != null && !res.trim().isEmpty()) {
+                        java.util.regex.Pattern pattern =
+                            java.util.regex.Pattern.compile("taskId=(\\d+)");
+                        java.util.regex.Matcher matcher = pattern.matcher(res);
+                        if (matcher.find()) {
+                            clockTaskId = matcher.group(1);
+                            Log.d(TAG, "Found clock taskId=" + clockTaskId);
+                            break;
+                        }
+                    }
+                    attempts++;
+                }
+
+                // Step 5: move the task to display 1 (rear screen)
+                if (clockTaskId != null) {
+                    String moveCmd = "service call activity_task 50 i32 " + clockTaskId + " i32 1";
+                    taskService.executeShellCommand(moveCmd);
+                    Thread.sleep(40);
+                    Log.d(TAG, "✅ Clock started on rear screen");
+                } else {
+                    Log.e(TAG, "❌ Failed to find clock taskId");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to show clock on rear screen", e);
+            }
+        }).start();
+    }
+
     /**
  * V2.4: kiểm trathông báodịch vụ lắng nghecóđãbật
  */

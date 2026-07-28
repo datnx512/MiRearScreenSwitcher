@@ -8,6 +8,7 @@ import '../services/locale_controller.dart';
 import '../widgets/squircle.dart';
 import '../widgets/gradient_widgets.dart';
 import 'app_selection_page.dart';
+import 'settings_page.dart';
 import '../models/app_profile.dart';
 
 enum ShizukuStatus { checking, running, error }
@@ -50,6 +51,7 @@ class _HomePageState extends State<HomePage> {
   bool _alwaysWakeUpEnabled = false;
   bool _chargingAlwaysOnEnabled = false;
   bool _notificationEnabled = false;
+  String? _activeProfileName;
 
   @override
   void initState() {
@@ -287,6 +289,7 @@ class _HomePageState extends State<HomePage> {
         _alwaysWakeUpEnabled = profile.alwaysWakeUp;
         _chargingAnimationEnabled = profile.chargingAnimation;
         _chargingAlwaysOnEnabled = profile.chargingAlwaysOn;
+        _activeProfileName = profile.name;
         // notificationEnabled isn't in AppProfile tests, so we leave it as is or default
       });
 
@@ -327,7 +330,7 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã áp dụng cấu hình: ${profile.name}')),
+          SnackBar(content: Text('Đã áp dụng profile: ${profile.name}')),
         );
       }
     } catch (e) {
@@ -564,96 +567,47 @@ class _HomePageState extends State<HomePage> {
   // === UI Builder helpers ===
 
   Widget _buildProfileSelector(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            'Hồ sơ cài đặt',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-        ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          clipBehavior: Clip.none,
-          child: Row(
-            children: AppProfile.presets.map((profile) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 12.0),
-                child: CustomPaint(
-                  painter: SquircleBorderPainter(
-                    radius: SquircleRadii.medium,
-                    color: Colors.white.withValues(alpha: 0.5),
-                    strokeWidth: 1.5,
+    return SizedBox(
+      height: 44,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: AppProfile.presets.length,
+        itemBuilder: (context, index) {
+          final profile = AppProfile.presets[index];
+          final isActive = _activeProfileName == profile.name;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: (_isLoading || !_shizukuRunning)
+                  ? null
+                  : () => _applyProfile(profile),
+              child: ClipPath(
+                clipper: const SquircleClipper(cornerRadius: SquircleRadii.small),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: isActive ? kBrandGradient : null,
+                    color: isActive ? null : Colors.white.withValues(alpha: 0.25),
                   ),
-                  child: ClipPath(
-                    clipper: const SquircleClipper(cornerRadius: SquircleRadii.medium),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: (_isLoading || !_shizukuRunning) ? null : () => _applyProfile(profile),
-                          splashColor: Colors.white.withValues(alpha: 0.3),
-                          highlightColor: Colors.white.withValues(alpha: 0.2),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(profile.icon, style: const TextStyle(fontSize: 20)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  profile.name,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                  child: Row(
+                    children: [
+                      Text(profile.icon, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 6),
+                      Text(
+                        profile.name,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showLanguagePicker(BuildContext context) {
-    final lc = widget.localeController;
-    showDialog(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Chọn ngôn ngữ'),
-        children: LocaleController.supportedLocales.entries.map((entry) {
-          return RadioListTile<String>(
-            value: entry.key,
-            groupValue: lc.currentCode,
-            title: Text(entry.value),
-            onChanged: (value) {
-              if (value != null) {
-                lc.setLocale(value);
-              }
-              Navigator.pop(context);
-            },
+              ),
+            ),
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -933,14 +887,19 @@ class _HomePageState extends State<HomePage> {
             const Text('MRSS', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () => _showLanguagePicker(context),
-            tooltip: widget.localeController.currentName,
-          ),
-          IconButton(
-            icon: Icon(tc.isDark ? Icons.light_mode : Icons.dark_mode),
-            onPressed: () => tc.toggle(),
-            tooltip: tc.isDark ? 'Chế độ sáng' : 'Chế độ tối',
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(
+                    themeController: widget.themeController,
+                    localeController: widget.localeController,
+                  ),
+                ),
+              );
+            },
+            tooltip: 'Cài đặt',
           ),
           IconButton(
             icon: const Icon(Icons.restart_alt),
@@ -960,6 +919,10 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Profile chips
+                _buildProfileSelector(context),
+                const SizedBox(height: 20),
+
                 // Status card
                 _buildGlassCard(
                   padding: const EdgeInsets.all(16),
@@ -1003,10 +966,6 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 20),
-
-                // Profile selector
-                _buildProfileSelector(context),
                 const SizedBox(height: 20),
 
                 // DPI settings card

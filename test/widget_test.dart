@@ -96,7 +96,7 @@ void main() {
       localeController.dispose();
     });
 
-    testWidgets('renders the dark-mode toggle icon', (WidgetTester tester) async {
+    testWidgets('renders the settings gear icon', (WidgetTester tester) async {
       usePhoneSurface(tester);
       final themeController = ThemeController();
       final localeController = LocaleController();
@@ -112,8 +112,8 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      // In light/system mode the toggle shows the dark-mode icon.
-      expect(find.byIcon(Icons.dark_mode), findsOneWidget);
+      // The AppBar now has a settings gear icon instead of the dark-mode toggle.
+      expect(find.byIcon(Icons.settings), findsOneWidget);
       themeController.dispose();
       localeController.dispose();
     });
