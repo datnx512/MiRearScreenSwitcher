@@ -99,10 +99,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: '🕐',
                       title: 'Đồng hồ màn hình sau',
                       subtitle: 'Hiển thị giờ + ngày + pin',
-                      onTap: () {
+                      onTap: () async {
                         try {
                           const platform = MethodChannel('com.display.switcher/task');
-                          platform.invokeMethod('showRearClock');
+                          await platform.invokeMethod('showRearClock');
+                          if (context.mounted) {
+                            _showSnackBar('Đã mở đồng hồ trên màn hình sau');
+                          }
                         } catch (e) {
                           _showSnackBar('Không thể mở đồng hồ: $e');
                         }
@@ -113,10 +116,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: '🎵',
                       title: 'Điều khiển nhạc',
                       subtitle: 'Play/Pause/Next trên màn hình sau',
-                      onTap: () {
+                      onTap: () async {
                         try {
                           const platform = MethodChannel('com.display.switcher/task');
-                          platform.invokeMethod('showRearMedia');
+                          await platform.invokeMethod('showRearMedia');
+                          if (context.mounted) {
+                            _showSnackBar('Đã mở điều khiển nhạc trên màn hình sau');
+                          }
                         } catch (e) {
                           _showSnackBar('Không thể mở media: $e');
                         }
