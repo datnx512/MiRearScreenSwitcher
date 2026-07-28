@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../l10n/app_localizations.dart';
+import '../services/theme_controller.dart';
+import '../services/locale_controller.dart';
 import '../widgets/squircle.dart';
 import '../widgets/gradient_widgets.dart';
 import 'app_selection_page.dart';
@@ -11,7 +13,14 @@ enum ShizukuStatus { checking, running, error }
 
 /// Main home page with status, DPI settings, rotation, and feature toggles.
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final ThemeController themeController;
+  final LocaleController localeController;
+
+  const HomePage({
+    super.key,
+    required this.themeController,
+    required this.localeController,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -492,6 +501,29 @@ class _HomePageState extends State<HomePage> {
 
   // === UI Builder helpers ===
 
+  void _showLanguagePicker(BuildContext context) {
+    final lc = widget.localeController;
+    showDialog(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Chọn ngôn ngữ'),
+        children: LocaleController.supportedLocales.entries.map((entry) {
+          return RadioListTile<String>(
+            value: entry.key,
+            groupValue: lc.currentCode,
+            title: Text(entry.value),
+            onChanged: (value) {
+              if (value != null) {
+                lc.setLocale(value);
+              }
+              Navigator.pop(context);
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildGlassCard({
     required List<Widget> children,
     EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -499,7 +531,7 @@ class _HomePageState extends State<HomePage> {
     return CustomPaint(
       painter: SquircleBorderPainter(
         radius: SquircleRadii.large,
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         strokeWidth: 1.5,
       ),
       child: ClipPath(
@@ -509,7 +541,7 @@ class _HomePageState extends State<HomePage> {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.25),
+              color: Colors.white.withValues(alpha: 0.25),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,10 +581,10 @@ class _HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.orange.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(SquircleRadii.small),
               border: Border.all(
-                color: Colors.orange.withOpacity(0.4),
+                color: Colors.orange.withValues(alpha: 0.4),
                 width: 1,
               ),
             ),
@@ -689,7 +721,7 @@ class _HomePageState extends State<HomePage> {
     return CustomPaint(
       painter: SquircleBorderPainter(
         radius: SquircleRadii.large,
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         strokeWidth: 1.5,
       ),
       child: ClipPath(
@@ -700,11 +732,11 @@ class _HomePageState extends State<HomePage> {
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
-              splashColor: Colors.white.withOpacity(0.3),
-              highlightColor: Colors.white.withOpacity(0.2),
+              splashColor: Colors.white.withValues(alpha: 0.3),
+              highlightColor: Colors.white.withValues(alpha: 0.2),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                 ),
                 padding: const EdgeInsets.symmetric(
                     vertical: 12, horizontal: 16),
@@ -737,6 +769,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final tc = widget.themeController;
+    final gradient = tc.currentGradient;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -751,6 +785,16 @@ class _HomePageState extends State<HomePage> {
             const Text('MRSS', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: () => _showLanguagePicker(context),
+            tooltip: widget.localeController.currentName,
+          ),
+          IconButton(
+            icon: Icon(tc.isDark ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => tc.toggle(),
+            tooltip: tc.isDark ? 'Chế độ sáng' : 'Chế độ tối',
+          ),
+          IconButton(
             icon: const Icon(Icons.restart_alt),
             onPressed: _restartApp,
             tooltip: l.translate('restart_app'),
@@ -760,7 +804,7 @@ class _HomePageState extends State<HomePage> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(gradient: kBrandGradient),
+        decoration: BoxDecoration(gradient: gradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'squircle.dart';
 
@@ -28,8 +29,8 @@ class _GradientToggleState extends State<GradientToggle> {
         onTap: () => widget.onChanged(!widget.value),
         onHighlightChanged: (h) => setState(() => _pressed = h),
         customBorder: const SquircleShapeBorder(cornerRadius: SquircleRadii.tiny),
-        splashColor: Colors.white.withOpacity(0.2),
-        highlightColor: Colors.white.withOpacity(0.1),
+        splashColor: Colors.white.withValues(alpha: 0.2),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
         child: ClipPath(
           clipper: const SquircleClipper(cornerRadius: SquircleRadii.tiny),
           child: SizedBox(
@@ -37,7 +38,7 @@ class _GradientToggleState extends State<GradientToggle> {
             height: 30,
             child: Stack(
               children: [
-                Container(color: Colors.white.withOpacity(0.25)),
+                Container(color: Colors.white.withValues(alpha: 0.25)),
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOut,
@@ -68,7 +69,7 @@ class _GradientToggleState extends State<GradientToggle> {
                           borderRadius: BorderRadius.circular(11),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
+                              color: Colors.black.withValues(alpha: 0.15),
                               blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
@@ -122,7 +123,7 @@ class _GradientCheckboxState extends State<GradientCheckbox> {
             height: 24,
             child: Stack(
               children: [
-                Container(color: Colors.white.withOpacity(0.25)),
+                Container(color: Colors.white.withValues(alpha: 0.25)),
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 200),
                   opacity: widget.value ? 1.0 : 0.0,
@@ -136,7 +137,7 @@ class _GradientCheckboxState extends State<GradientCheckbox> {
                   child: CustomPaint(
                     painter: SquircleBorderPainter(
                       radius: SquircleRadii.checkbox,
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       strokeWidth: 2,
                     ),
                   ),

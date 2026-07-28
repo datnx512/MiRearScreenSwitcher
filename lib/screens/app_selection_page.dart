@@ -1,6 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:typed_data';
 import '../l10n/app_localizations.dart';
 import '../widgets/squircle.dart';
 import '../widgets/gradient_widgets.dart';
@@ -340,7 +340,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                               ),
                               child: Column(
                                 children: [
