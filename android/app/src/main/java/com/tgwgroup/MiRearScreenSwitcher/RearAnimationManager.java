@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木�? *
+ * Chief Tester: �? *
  * Co-developed with AI assistants:
  * - Cursor
  * - Claude-4.5-Sonnet
@@ -17,33 +17,33 @@ package com.tgwgroup.MiRearScreenSwitcher;
 import android.util.Log;
 
 /**
- * 背屏动画管理器
- * 统一管理充电动画和通知动画，实现动画打断机制
+ * màn hình sauanimation manager
+ * thống nhấtquản lýhoạt ảnh sạcvàthông báo hoạt ảnh, thựchiệnhoạt ảnhngắt
  */
 public class RearAnimationManager {
     private static final String TAG = "RearAnimationManager";
     
-    // 动画类型
+    // hoạt ảnhloại
     public enum AnimationType {
-        NONE,           // 无动画
-        CHARGING,       // 充电动画
-        NOTIFICATION    // 通知动画
+        NONE,           // không cóhoạt ảnh
+        CHARGING,       // hoạt ảnh sạc
+        NOTIFICATION    // thông báo hoạt ảnh
     }
     
-    // 当前正在播放的动画类型
+    // hiện tạiđangpháthoạt ảnhloại
     private static volatile AnimationType currentAnimation = AnimationType.NONE;
     
-    // 当前动画是否应该恢复官方Launcher（被新动画打断则不恢复）
+    // hiện tạihoạt ảnhcónênkhôi phụcLauncher chính thức（bịmớihoạt ảnhngắtthìkhôngkhôi phục）
     private static volatile boolean shouldRestoreOnDestroy = true;
     
-    // V3.5: 被打断的充电动画是否是常亮模式
+    // V3.5: hoạt ảnh sạc bị ngắtcólàchế độ giữ sáng
     private static volatile boolean interruptedChargingWasAlwaysOn = false;
     
     /**
-     * 开始播放动画
-     * @param type 动画类型
-     * @return 被打断的旧动画类型（NONE表示没有旧动画）
-     */
+ * bắt đầupháthoạt ảnh
+ * @param type hoạt ảnhloại
+ * @return hoạt ảnh cũ bị ngắtloại（NONEhiển thịkhôngcóhoạt ảnh cũ）
+ */
     public static synchronized AnimationType startAnimation(AnimationType type) {
         if (type == AnimationType.NONE) {
             Log.w(TAG, "⚠️ 尝试启动NONE类型的动画，忽略");
@@ -54,50 +54,50 @@ public class RearAnimationManager {
         
         if (oldAnimation != AnimationType.NONE) {
             Log.d(TAG, String.format("🔄 新动画[%s]打断旧动画[%s]", type, oldAnimation));
-            // 标记旧动画不需要恢复官方Launcher
+            // đánh dấuhoạt ảnh cũkhông cầnkhôi phụcLauncher chính thức
             shouldRestoreOnDestroy = false;
         } else {
             Log.d(TAG, String.format("▶️ 开始播放动画[%s]", type));
         }
         
-        // 设置新动画为当前动画
+        // cài đặtmớihoạt ảnhlàhiện tạihoạt ảnh
         currentAnimation = type;
-        shouldRestoreOnDestroy = true;  // 新动画默认需要恢复
+        shouldRestoreOnDestroy = true;  // mớihoạt ảnhmặc địnhcầnkhôi phục
         
-        return oldAnimation;  // 返回被打断的旧动画
+        return oldAnimation;  // trả vềhoạt ảnh cũ bị ngắt
     }
     
     /**
-     * V3.5: 标记被打断的充电动画是常亮模式
-     */
+ * V3.5: đánh dấuhoạt ảnh sạc bị ngắtlàchế độ giữ sáng
+ */
     public static synchronized void markInterruptedChargingAsAlwaysOn(boolean alwaysOn) {
         interruptedChargingWasAlwaysOn = alwaysOn;
         Log.d(TAG, "🔖 被打断的充电动画常亮标记: " + alwaysOn);
     }
     
     /**
-     * V3.5: 检查被打断的充电动画是否需要恢复
-     */
+ * V3.5: kiểm tra hoạt ảnh sạc bị ngắt có cần khôi phục
+ */
     public static synchronized boolean shouldResumeChargingAnimation() {
         return interruptedChargingWasAlwaysOn;
     }
     
     /**
-     * V3.5: 清除充电动画常亮标记
-     */
+ * V3.5: xóahoạt ảnh sạc giữ sángđánh dấu
+ */
     public static synchronized void clearChargingAlwaysOnFlag() {
         interruptedChargingWasAlwaysOn = false;
     }
     
     /**
-     * 结束动画
-     * @param type 动画类型
-     * @return 是否需要恢复官方Launcher
-     */
+ * kết thúchoạt ảnh
+ * @param type hoạt ảnhloại
+ * @return có cần khôi phụcLauncher chính thức
+ */
     public static synchronized boolean endAnimation(AnimationType type) {
         if (currentAnimation != type) {
             Log.w(TAG, String.format("⚠️ 尝试结束动画[%s]，但当前动画是[%s]", type, currentAnimation));
-            return false;  // 不是当前动画，不需要恢复
+            return false;  // khônglàhiện tạihoạt ảnh, không cầnkhôi phục
         }
         
         boolean shouldRestore = shouldRestoreOnDestroy;
@@ -115,22 +115,22 @@ public class RearAnimationManager {
     }
     
     /**
-     * 检查是否有动画正在播放
-     */
+ * kiểm tracócóhoạt ảnhđangphát
+ */
     public static synchronized boolean isAnimationPlaying() {
         return currentAnimation != AnimationType.NONE;
     }
     
     /**
-     * 获取当前动画类型
-     */
+ * lấy hiện tạihoạt ảnhloại
+ */
     public static synchronized AnimationType getCurrentAnimation() {
         return currentAnimation;
     }
     
     /**
-     * 打断指定类型的动画
-     */
+ * ngắtchắc chắnloạihoạt ảnh
+ */
     private static void interruptAnimation(AnimationType type) {
         android.content.Intent intent;
         String action;
@@ -147,8 +147,8 @@ public class RearAnimationManager {
         }
         
         try {
-            // 通过静态上下文发送广播（需要从Service获取）
-            // 这里暂时用日志标记，实际发送由调用方处理
+            // quastatictrêndướivăngửibroadcast（cầntừServicelấy）
+            // nàythời gianngười dùnglogđánh dấu, thực tếgửigọicáchxử lý
             Log.d(TAG, String.format("🔔 准备发送打断广播: %s", action));
         } catch (Exception e) {
             Log.e(TAG, "Failed to interrupt animation", e);
@@ -156,8 +156,8 @@ public class RearAnimationManager {
     }
     
     /**
-     * 发送打断广播（由Service调用）
-     */
+ * gửi broadcast ngắt（Servicegọi）
+ */
     public static void sendInterruptBroadcast(android.content.Context context, AnimationType type) {
         String action;
         

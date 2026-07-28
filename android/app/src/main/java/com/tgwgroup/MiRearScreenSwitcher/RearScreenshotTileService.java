@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -26,8 +26,8 @@ import android.widget.Toast;
 import rikka.shizuku.Shizuku;
 
 /**
- * Quick Settings Tile - 获取背屏截图
- * 点击后截取背屏当前画面并保存到相册
+ * Quick Settings Tile - lấymàn hình sauchụp màn hình
+ * sau khi nhấp chụp màn hình hiện tại màn hình sau và lưu vào album
  */
 public class RearScreenshotTileService extends TileService {
     private static final String TAG = "RearScreenshotTile";
@@ -54,22 +54,22 @@ public class RearScreenshotTileService extends TileService {
     };
 
     /**
-     * TaskService重连任务
-     */
+ * TaskServicekết nối lạivụ
+ */
     private final Runnable reconnectTaskServiceRunnable = new Runnable() {
         @Override
         public void run() {
             if (taskService == null) {
                 bindTaskService();
-                // 如果重连失败，1秒后再次尝试
+                // nếukết nối lại thất bại, sau 1 giâythử lại lần nữa
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 1000);
             }
         }
     };
 
     /**
-     * 安排TaskService重连
-     */
+ * xếpTaskServicekết nối lại
+ */
     private void scheduleReconnectTaskService() {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(reconnectTaskServiceRunnable, 200);
     }
@@ -114,10 +114,10 @@ public class RearScreenshotTileService extends TileService {
 
                     boolean success = taskService.takeRearScreenshot();
 
-                    // 无论成功失败都显示成功Toast
+                    // không cóthành côngthất bạiđềuhiển thịthành côngToast
                     showTemporaryFeedback("✓ 已保存");
 
-                    // 先收起控制中心
+                    // thu gọn Control Center trước
                     try {
                         taskService.collapseStatusBar();
                         Thread.sleep(300);
@@ -125,14 +125,14 @@ public class RearScreenshotTileService extends TileService {
                         Log.e(TAG, "Failed to collapse status bar after screenshot", ignored);
                     }
 
-                    // 显示Toast提示
+                    // hiển thị Toastgợi ý
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         Toast.makeText(this, getString(R.string.toast_screenshot_saved), Toast.LENGTH_SHORT).show();
                     });
 
                 } catch (Exception e) {
                     Log.e(TAG, "Screenshot error", e);
-                    // 即使异常也显示成功Toast
+                    // tức làsử dụngexceptioncũnghiển thịthành côngToast
                     showTemporaryFeedback("✓ 已保存");
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         Toast.makeText(this, getString(R.string.toast_screenshot_saved), Toast.LENGTH_SHORT).show();
@@ -178,7 +178,7 @@ public class RearScreenshotTileService extends TileService {
             tile.setSubtitle(message);
             tile.updateTile();
 
-            // 1秒后清除反馈
+            // sau 1 giâyxóa
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 Tile t = getQsTile();
                 if (t != null) {

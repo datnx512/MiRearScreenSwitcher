@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -41,25 +41,25 @@ import androidx.core.app.NotificationCompat;
 import rikka.shizuku.Shizuku;
 
 /**
- * 背屏录屏服务
- * 功能：
- * 1. 显示悬浮窗（录制/停止按钮+关闭按钮）
- * 2. 录制背屏画面（screenrecord --display-id 1）
- * 3. 前台Service保活
+ * màn hình sauquay màn hìnhdịch vụ
+ * chức năng：
+ * 1. hiển thịoverlay window（quay/dừngnút+nút đóng）
+ * 2. quaymàn hình saumàn hình（screenrecord --display-id 1）
+ * 3. foregroundServicegiữ sống
  */
 public class ScreenRecordService extends Service {
     private static final String TAG = "ScreenRecordService";
-    private static final String CHANNEL_ID = "rear_screen_keeper"; // 使用MRSS内核服务通道
-    private static final int NOTIFICATION_ID = 10004; // 避免与KeeperService冲突
+    private static final String CHANNEL_ID = "rear_screen_keeper"; // sử dụngMRSSkernel servicethông quađạo
+    private static final int NOTIFICATION_ID = 10004; // tránhvớiKeeperService
     
     private static ScreenRecordService instance = null;
     private WindowManager windowManager;
     private View floatingView;
     private boolean isRecording = false;
     private String currentVideoPath;
-    private int recordPid = -1; // 录屏进程ID
+    private int recordPid = -1; // quay màn hìnhprocessID
     private Handler wakeupHandler = new Handler(android.os.Looper.getMainLooper());
-    private static final long WAKEUP_INTERVAL_MS = 100; // 每100ms唤醒一次背屏
+    private static final long WAKEUP_INTERVAL_MS = 100; // 100msđánh thứcmột lầnmàn hình sau
     
     // TaskService
     private ITaskService taskService;
@@ -95,17 +95,17 @@ public class ScreenRecordService extends Service {
         Log.d(TAG, "═══════════════════════════════════════");
         Log.d(TAG, "📹 ScreenRecordService onCreate");
         
-        // 创建通知渠道
+        // tạothông báođạo
         createNotificationChannel();
         
-        // 绑定TaskService
+        // bind TaskService
         bindTaskService();
         
-        // 启动前台通知
+        // khởi độngthông báo foreground
         startForeground(NOTIFICATION_ID, buildNotification());
         Log.d(TAG, "✓ 前台Service已启动");
         
-        // 显示悬浮窗
+        // hiển thịoverlay window
         try {
             showFloatingWindow();
         } catch (Exception e) {
@@ -119,7 +119,7 @@ public class ScreenRecordService extends Service {
     
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_STICKY; // 被杀后自动重启
+        return START_STICKY; // bịkillsautự độngkhởi động lại
     }
     
     @Override
@@ -153,7 +153,7 @@ public class ScreenRecordService extends Service {
     }
     
     private void createNotificationChannel() {
-        // 不创建新通道，使用MRSS内核服务的通道（已经存在）
+        // khôngtạomớithông quađạo, sử dụngMRSSkernel servicethông quađạo（đãtồnở）
     }
     
     private Notification buildNotification() {
@@ -162,7 +162,7 @@ public class ScreenRecordService extends Service {
             this, 0, intent, PendingIntent.FLAG_IMMUTABLE
         );
         
-        // 统一使用MRSS内核服务的通知样式
+        // thống nhấtsử dụngMRSSkernel servicethông báothức
         return new NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("MRSS内核服务")
             .setContentText("MRSS目前正在运行")
@@ -173,8 +173,8 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 显示悬浮窗
-     */
+ * hiển thịoverlay window
+ */
     private void showFloatingWindow() {
         Log.d(TAG, "→ 准备显示悬浮窗");
         
@@ -185,7 +185,7 @@ public class ScreenRecordService extends Service {
         }
         Log.d(TAG, "✓ WindowManager已获取");
         
-        // 创建悬浮窗布局
+        // tạooverlay windowbố cục
         Log.d(TAG, "→ 创建悬浮窗视图");
         floatingView = createFloatingView();
         if (floatingView == null) {
@@ -194,7 +194,7 @@ public class ScreenRecordService extends Service {
         }
         Log.d(TAG, "✓ 视图已创建");
         
-        // 设置悬浮窗参数
+        // cài đặtoverlay windowtham số
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -223,31 +223,31 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 创建悬浮窗视图
-     */
+ * tạooverlay windowđồ
+ */
     private View createFloatingView() {
         Log.d(TAG, "→ 开始创建悬浮窗布局");
         
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setPadding(16, 16, 16, 16);
-        layout.setGravity(android.view.Gravity.CENTER); // 上下左右居中
+        layout.setGravity(android.view.Gravity.CENTER); // trêndướitráiphảitrong
         
         Log.d(TAG, "✓ LinearLayout已创建");
         
-        // 背景 - 四色渐变（与其他UI一致）
+        // sau - dải màu（và khácUImột）
         GradientDrawable background = new GradientDrawable();
         background.setOrientation(GradientDrawable.Orientation.TL_BR);
         background.setColors(new int[]{
-            0xE0FF9D88,  // 珊瑚橙（88%不透明）
-            0xE0FFB5C5,  // 粉红（88%不透明）
-            0xE0E0B5DC,  // 紫色（88%不透明）
-            0xE0A8C5E5   // 蓝色（88%不透明）
+            0xE0FF9D88,  // （88%khôngtrong suốt）
+            0xE0FFB5C5,  // （88%khôngtrong suốt）
+            0xE0E0B5DC,  // （88%khôngtrong suốt）
+            0xE0A8C5E5   // （88%khôngtrong suốt）
         });
         background.setCornerRadius(60);
         layout.setBackground(background);
         
-        // 关闭按钮（×）- 先声明
+        // nút đóng（×）- trướcsáng
         final android.widget.TextView closeButton = new android.widget.TextView(this);
         closeButton.setText("×");
         closeButton.setTextColor(Color.WHITE);
@@ -257,41 +257,41 @@ public class ScreenRecordService extends Service {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        closeParams.gravity = android.view.Gravity.CENTER; // 上下居中
+        closeParams.gravity = android.view.Gravity.CENTER; // trêndướitrong
         closeParams.leftMargin = 24;
         closeButton.setLayoutParams(closeParams);
         
         closeButton.setOnClickListener(v -> {
-            // 录制中不允许关闭
+            // quaytrongkhôngcho phépđóng
             if (isRecording) {
                 Toast.makeText(this, "请先停止录制", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // 停止服务（关闭悬浮窗）
+            // dừngdịch vụ（đóngoverlay window）
             stopSelf();
         });
         
-        // 录制/停止按钮（圆形，红色）
+        // quay/dừngnút（, ）
         final View recordButton = new View(this);
         int buttonSize = 120;
         LinearLayout.LayoutParams recordParams = new LinearLayout.LayoutParams(buttonSize, buttonSize);
-        recordParams.gravity = android.view.Gravity.CENTER; // 上下居中
+        recordParams.gravity = android.view.Gravity.CENTER; // trêndướitrong
         recordButton.setLayoutParams(recordParams);
         
-        // 初始状态：录制按钮（实心圆）
+        // khởi tạotrạng thái：quaynút（thực）
         updateRecordButtonState(recordButton, false);
         
-        // 点击事件
+        // nhấpsự kiện
         recordButton.setOnClickListener(v -> {
             if (!isRecording) {
                 startRecording();
                 updateRecordButtonState(recordButton, true);
-                // 录制时隐藏关闭按钮
+                // quaythời gianẩnnút đóng
                 closeButton.setVisibility(View.GONE);
             } else {
                 stopRecordingInternal(recordButton, closeButton);
                 updateRecordButtonState(recordButton, false);
-                // 注意：关闭按钮会在停止录制完成后才显示（在stopRecordingInternal的Toast回调中）
+                // chú ý：nút đóng sẽ ở khi dừng quay xong mới hiển thị（ởstopRecordingInternalToastquaygọitrong）
             }
         });
         
@@ -300,7 +300,7 @@ public class ScreenRecordService extends Service {
         
         Log.d(TAG, "✓ 按钮已添加到布局");
         
-        // 拖动功能
+        // độngchức năng
         final WindowManager.LayoutParams[] params = new WindowManager.LayoutParams[1];
         layout.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
@@ -335,30 +335,30 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 更新录制按钮状态
-     */
+ * cập nhậtquaynúttrạng thái
+ */
     private void updateRecordButtonState(View button, boolean recording) {
         GradientDrawable drawable = new GradientDrawable();
         
         if (recording) {
-            // 停止状态：方形
+            // dừngtrạng thái：cách
             drawable.setShape(GradientDrawable.RECTANGLE);
             drawable.setCornerRadius(20);
             drawable.setColor(Color.RED);
-            drawable.setSize(60, 60); // 方形内部稍小
+            drawable.setSize(60, 60); // cáchtrongbộ phậnnhỏ
         } else {
-            // 录制状态：圆形
+            // quaytrạng thái：
             drawable.setShape(GradientDrawable.OVAL);
             drawable.setColor(Color.RED);
         }
         
-        drawable.setStroke(6, Color.WHITE); // 白色边框
+        drawable.setStroke(6, Color.WHITE); // khung
         button.setBackground(drawable);
     }
     
     /**
-     * 确保TaskService连接
-     */
+ * đảm bảo TaskService kết nối
+ */
     private boolean ensureTaskServiceConnected() {
         if (taskService != null) {
             Log.d(TAG, "✓ TaskService已连接");
@@ -367,10 +367,10 @@ public class ScreenRecordService extends Service {
         
         Log.w(TAG, "⚠ TaskService未连接，尝试重新绑定...");
         
-        // 尝试绑定
+        // thử bind
         bindTaskService();
         
-        // 等待连接（最多3秒）
+        // chờkết nối（tối đa3giây）
         int attempts = 0;
         while (taskService == null && attempts < 30) {
             try {
@@ -391,22 +391,22 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 持续唤醒背屏任务 - 录制期间防止背屏熄屏
-     */
+ * liên tụcđánh thứcmàn hình sauvụ - quaytrong thời gianngăn chặnmàn hình sautắt màn hình
+ */
     private final Runnable wakeupRearScreenRunnable = new Runnable() {
         @Override
         public void run() {
             if (isRecording && taskService != null) {
                 try {
-                    // 向背屏(displayId=1)发送WAKEUP唤醒信号
+                    // vềmàn hình sau(displayId=1)gửiWAKEUPđánh thứcsố
                     taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
-                    // 不输出日志以减少刷屏
+                    // khôngxuấtlogbằngítquétmàn hình
                 } catch (Exception e) {
                     Log.w(TAG, "背屏唤醒失败: " + e.getMessage());
                 }
             }
             
-            // 持续发送，每100ms执行一次
+            // liên tục gửi, 100msmột lần
             if (isRecording) {
                 wakeupHandler.postDelayed(this, WAKEUP_INTERVAL_MS);
             }
@@ -414,19 +414,19 @@ public class ScreenRecordService extends Service {
     };
     
     /**
-     * 启动背屏持续唤醒
-     */
+ * khởi độngmàn hình sauliên tụcđánh thức
+ */
     private void startRearScreenWakeup() {
         if (wakeupHandler != null) {
-            // 立即执行第一次唤醒，然后开始持续发送
+            // ngaymột lầnđánh thức, sau đóbắt đầuliên tục gửi
             wakeupHandler.post(wakeupRearScreenRunnable);
             Log.d(TAG, "⏰ 背屏持续唤醒已启动 (100ms间隔)");
         }
     }
     
     /**
-     * 停止背屏持续唤醒
-     */
+ * dừngmàn hình sauliên tụcđánh thức
+ */
     private void stopRearScreenWakeup() {
         if (wakeupHandler != null) {
             wakeupHandler.removeCallbacks(wakeupRearScreenRunnable);
@@ -435,11 +435,11 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 开始录制
-     */
+ * bắt đầuquay
+ */
     private void startRecording() {
         new Thread(() -> {
-            // 确保TaskService已连接
+            // đảm bảo TaskService đãkết nối
             if (!ensureTaskServiceConnected()) {
                 Log.e(TAG, "TaskService未连接");
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -448,37 +448,37 @@ public class ScreenRecordService extends Service {
                 return;
             }
             
-            // 启动录制前先发送一次keycode wakeup到背屏
+            // khởi độngquaytrướctrướcgửimột lầnkeycode wakeupđếnmàn hình sau
             try {
                 taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
-                Thread.sleep(200); // 等待wakeup生效
+                Thread.sleep(200); // chờwakeup
             } catch (Exception e) {
                 Log.w(TAG, "启动前背屏keycode wakeup失败: " + e.getMessage());
             }
             
             try {
-                // 生成文件名
+                // thànhfiletên
                 String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss")
                     .format(new java.util.Date());
                 currentVideoPath = "/storage/emulated/0/Movies/MRSS_" + timestamp + ".mp4";
                 
-                // 创建保存目录
+                // tạolưumụcghi
                 taskService.executeShellCommand("mkdir -p /storage/emulated/0/Movies");
                 Log.d(TAG, "✓ 目录已创建");
                 
-                // 获取背屏的真实display ID（照抄截图逻辑）
+                // lấymàn hình sauthậtthựcdisplay ID（chụp màn hìnhlogic）
                 String getDisplayIdCmd = "dumpsys SurfaceFlinger --display-id | grep -oE 'Display [0-9]+' | awk 'NR==2{print $2}'";
                 String displayId = taskService.executeShellCommandWithResult(getDisplayIdCmd);
                 
                 if (displayId == null || displayId.trim().isEmpty()) {
-                    displayId = "1"; // 默认使用1
+                    displayId = "1"; // mặc địnhsử dụng1
                     Log.w(TAG, "⚠ 未能获取display ID，使用默认值: 1");
                 } else {
                     displayId = displayId.trim();
                     Log.d(TAG, "✓ 背屏display ID: " + displayId);
                 }
                 
-                // 先测试screenrecord命令是否可用
+                // trướcđothửscreenrecordlệnhcócó thểngười dùng
                 String testCmd = "which screenrecord";
                 String testResult = taskService.executeShellCommandWithResult(testCmd);
                 Log.d(TAG, "screenrecord路径: " + testResult);
@@ -491,12 +491,12 @@ public class ScreenRecordService extends Service {
                     return;
                 }
                 
-                // 使用完整路径启动录屏
+                // sử dụnghoàn toànđường dẫnkhởi độngquay màn hình
                 String screenrecordPath = testResult.trim();
                 String pidFile = "/data/local/tmp/mrss_record.pid";
                 String logFile = "/data/local/tmp/mrss_record.log";
                 
-                // 后台启动录屏并保存输出到日志
+                // backgroundkhởi độngquay màn hìnhvàlưuxuấtđếnlog
                 String recordCmd = String.format(
                     "%s --display-id %s --bit-rate 20000000 %s > %s 2>&1 & echo $! > %s",
                     screenrecordPath, displayId, currentVideoPath, logFile, pidFile
@@ -504,7 +504,7 @@ public class ScreenRecordService extends Service {
                 
                 Log.d(TAG, "→ 执行录屏命令: " + recordCmd);
                 
-                // 通过TaskService执行（有Shizuku权限）
+                // qua TaskService（cóShizukuquyền）
                 boolean cmdSuccess = taskService.executeShellCommand(recordCmd);
                 Log.d(TAG, "命令执行结果: " + cmdSuccess);
                 
@@ -516,10 +516,10 @@ public class ScreenRecordService extends Service {
                     return;
                 }
                 
-                // 等待进程启动和PID文件生成
+                // chờprocesskhởi độngvàPIDfilethành
                 Thread.sleep(800);
                 
-                // 读取PID
+                // PID
                 String pidStr = taskService.executeShellCommandWithResult("cat " + pidFile);
                 Log.d(TAG, "PID文件内容: " + pidStr);
                 
@@ -534,32 +534,32 @@ public class ScreenRecordService extends Service {
                     Log.e(TAG, "❌ 无法读取PID文件");
                 }
                 
-                // 读取启动日志查看错误
+                // khởi độnglogtralỗi
                 String logContent = taskService.executeShellCommandWithResult("cat " + logFile);
                 if (logContent != null && !logContent.trim().isEmpty()) {
                     Log.d(TAG, "录屏进程日志: " + logContent);
                 }
                 
-                // 验证进程是否真的在运行（多种方式）
+                // trải nghiệmprocesscóthậtở（nhiềucách）
                 Log.d(TAG, "→ 验证录屏进程...");
                 
-                // 方法1: ps aux
+                // phương thức1: ps aux
                 String checkCmd1 = "ps -A | grep screenrecord";
                 String checkResult1 = taskService.executeShellCommandWithResult(checkCmd1);
                 Log.d(TAG, "ps -A结果: " + checkResult1);
                 
-                // 方法2: ps -p
+                // phương thức2: ps -p
                 String checkCmd2 = "ps -p " + recordPid;
                 String checkResult2 = taskService.executeShellCommandWithResult(checkCmd2);
                 Log.d(TAG, "ps -p结果: " + checkResult2);
                 
-                // 方法3: 检查文件是否开始生成
+                // phương thức3: kiểm trafilecóbắt đầuthành
                 Thread.sleep(500);
                 String checkFile = "ls -l " + currentVideoPath;
                 String fileCheck = taskService.executeShellCommandWithResult(checkFile);
                 Log.d(TAG, "文件检查: " + fileCheck);
                 
-                // 如果进程在运行 或 文件已开始生成，认为成功
+                // nếuprocessở hoặc fileđãbắt đầuthành, nghĩthành công
                 boolean processRunning = (checkResult1 != null && checkResult1.contains("screenrecord")) ||
                                        (checkResult2 != null && checkResult2.contains(String.valueOf(recordPid)));
                 boolean fileExists = (fileCheck != null && !fileCheck.contains("No such file"));
@@ -568,12 +568,12 @@ public class ScreenRecordService extends Service {
                     Log.d(TAG, "✓ 录屏已启动 (进程运行=" + processRunning + ", 文件存在=" + fileExists + ")");
                     isRecording = true;
                     
-                    // 录制成功启动后，开始持续唤醒背屏
+                    // quaythành côngkhởi độngsau, bắt đầuliên tụcđánh thứcmàn hình sau
                     startRearScreenWakeup();
                 } else {
                     Log.e(TAG, "❌ 录屏进程未启动");
                     
-                    // 检查错误原因
+                    // kiểm tralỗinguyên nhân
                     String errorCheck = "screenrecord --display-id 1 --help 2>&1 | head -n 5";
                     String errorMsg = taskService.executeShellCommandWithResult(errorCheck);
                     Log.e(TAG, "错误信息: " + errorMsg);
@@ -584,7 +584,7 @@ public class ScreenRecordService extends Service {
                     return;
                 }
                 
-                // 更新通知和Toast
+                // cập nhậtthông báovàToast
                 new Handler(Looper.getMainLooper()).post(() -> {
                     Notification notification = buildNotification();
                     NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -609,15 +609,15 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 停止录制（带按钮引用，用于更新状态）
-     */
+ * dừng quay（nútngười dùng, dùng chocập nhậttrạng thái）
+ */
     private void stopRecordingInternal(final View recordButton, final android.widget.TextView closeButton) {
         if (!isRecording) {
             return;
         }
         
         new Thread(() -> {
-            // 确保TaskService连接（主动重连）
+            // đảm bảo TaskService kết nối（chủ độngkết nối lại）
             if (!ensureTaskServiceConnected()) {
                 Log.e(TAG, "❌ 停止录制失败：TaskService未连接");
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -630,7 +630,7 @@ public class ScreenRecordService extends Service {
                 if (recordPid > 0) {
                     Log.d(TAG, "→ 停止录屏进程 (PID=" + recordPid + ")");
                     
-                    // 发送SIGINT信号停止录制（优雅停止）
+                    // gửiSIGINTsốdừng quay（ưudừng）
                     String killCmd = "kill -2 " + recordPid;
                     boolean killed = taskService.executeShellCommand(killCmd);
                     
@@ -641,25 +641,25 @@ public class ScreenRecordService extends Service {
                         taskService.executeShellCommand("kill " + recordPid);
                     }
                     
-                    Thread.sleep(1000); // 等待进程优雅退出并保存文件
+                    Thread.sleep(1000); // chờprocessưuthoátvàlưufile
                     
                     isRecording = false;
                     recordPid = -1;
                     
-                    // 停止背屏持续唤醒
+                    // dừngmàn hình sauliên tụcđánh thức
                     stopRearScreenWakeup();
                     
-                    // 验证文件是否存在
+                    // trải nghiệmfilecótồnở
                     String checkFile = "ls -lh " + currentVideoPath;
                     String fileInfo = taskService.executeShellCommandWithResult(checkFile);
                     Log.d(TAG, "文件信息: " + fileInfo);
                     
-                    // 刷新媒体库
+                    // làm mớimedia library
                     String refreshCmd = "am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file://" + currentVideoPath;
                     taskService.executeShellCommand(refreshCmd);
                     Log.d(TAG, "✓ 媒体库已刷新");
                     
-                    // 更新通知和Toast
+                    // cập nhậtthông báovàToast
                     new Handler(Looper.getMainLooper()).post(() -> {
                         Notification notification = buildNotification();
                         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -673,7 +673,7 @@ public class ScreenRecordService extends Service {
                             Toast.makeText(this, "录屏可能失败，请检查Movies文件夹", Toast.LENGTH_LONG).show();
                         }
                         
-                        // 显示关闭按钮
+                        // hiển thịnút đóng
                         if (closeButton != null) {
                             closeButton.setVisibility(View.VISIBLE);
                         }
@@ -689,8 +689,8 @@ public class ScreenRecordService extends Service {
     }
     
     /**
-     * 停止录制（兼容方法）
-     */
+ * dừng quay（tương thíchphương thức）
+ */
     private void stopRecording() {
         stopRecordingInternal(null, null);
     }
@@ -699,15 +699,15 @@ public class ScreenRecordService extends Service {
     public void onDestroy() {
         super.onDestroy();
         
-        // 停止背屏持续唤醒
+        // dừngmàn hình sauliên tụcđánh thức
         stopRearScreenWakeup();
         
-        // 停止录制
+        // dừng quay
         if (isRecording) {
             stopRecording();
         }
         
-        // 移除悬浮窗
+        // gỡ bỏoverlay window
         if (floatingView != null && windowManager != null) {
             try {
                 windowManager.removeView(floatingView);
@@ -717,7 +717,7 @@ public class ScreenRecordService extends Service {
             }
         }
         
-        // 解绑TaskService
+        // unbind TaskService
         if (taskService != null) {
             try {
                 Shizuku.unbindUserService(serviceArgs, taskServiceConnection, true);

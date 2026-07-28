@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -22,9 +22,9 @@ import android.os.Bundle;
 import android.util.Log;
 
 /**
- * V2.6: URI接收Activity
- * 完全透明，只负责转发URI到UriCommandService，然后立即finish
- * 不会显示任何UI，避免跳到MRSS页面
+ * V2.6: URInhậnActivity
+ * trong suốt hoàn toàn, chỉchuyểnphátURIđếnUriCommandService, sau đóngayfinish
+ * khôngsẽhiển thịUI, tránhbỏ quađếnMRSStrang
  */
 public class UriReceiverActivity extends Activity {
     private static final String TAG = "UriReceiverActivity";
@@ -33,7 +33,7 @@ public class UriReceiverActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // 不设置任何布局，保持透明
+        // khôngcài đặtbố cục, giữtrong suốt
         
         Intent intent = getIntent();
         if (intent != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
@@ -41,7 +41,7 @@ public class UriReceiverActivity extends Activity {
             if (uri != null && "mrss".equals(uri.getScheme())) {
                 Log.d(TAG, "🔗 URI接收: " + uri.toString());
                 
-                // 转发到UriCommandService处理
+                // chuyểnphátđếnUriCommandServicexử lý
                 Intent serviceIntent = new Intent(this, UriCommandService.class);
                 serviceIntent.setData(uri);
                 startService(serviceIntent);
@@ -50,14 +50,14 @@ public class UriReceiverActivity extends Activity {
             }
         }
         
-        // 立即finish，不显示任何UI
+        // ngayfinish, không hiển thịUI
         finish();
     }
     
     @Override
     public void finish() {
         super.finish();
-        // 禁用转场动画，完全透明
+        // tắtchuyểnhoạt ảnh, trong suốt hoàn toàn
         overridePendingTransition(0, 0);
     }
 }

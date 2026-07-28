@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -19,16 +19,16 @@ import android.graphics.Rect;
 import android.util.Log;
 
 /**
- * 显示屏信息缓存
- * 在应用启动时获取一次，之后直接使用缓存数据
+ * cache thông tin màn hình
+ * khi ứng dụng khởi động lấy một lần, sau đó trực tiếp sử dụng dữ liệu cache
  */
 public class DisplayInfoCache {
     private static final String TAG = "DisplayInfoCache";
     
-    // 单例
+    // singleton
     private static volatile DisplayInfoCache instance;
     
-    // 缓存的背屏信息
+    // cache thông tin màn hình sau
     private RearDisplayHelper.RearDisplayInfo cachedInfo;
     private boolean initialized = false;
     
@@ -46,8 +46,8 @@ public class DisplayInfoCache {
     }
     
     /**
-     * 初始化缓存（在应用启动时调用一次）
-     */
+ * khởi tạo cache (khi ứng dụng khởi động gọi một lần)
+ */
     public synchronized void initialize(ITaskService taskService) {
         if (initialized) {
             Log.d(TAG, "ℹ️ 已初始化，跳过");
@@ -65,7 +65,7 @@ public class DisplayInfoCache {
                 
         } catch (Exception e) {
             Log.e(TAG, "❌ 初始化失败", e);
-            // 设置默认值
+            // đặt giá trị mặc định
             cachedInfo = new RearDisplayHelper.RearDisplayInfo();
             cachedInfo.width = 904;
             cachedInfo.height = 572;
@@ -77,8 +77,8 @@ public class DisplayInfoCache {
     }
     
     /**
-     * 获取缓存的背屏信息
-     */
+ * lấycache thông tin màn hình sau
+ */
     public RearDisplayHelper.RearDisplayInfo getCachedInfo() {
         if (!initialized) {
             Log.w(TAG, "⚠️ 缓存未初始化，返回默认值");
@@ -93,23 +93,23 @@ public class DisplayInfoCache {
     }
     
     /**
-     * 强制重新获取（用于刷新缓存）
-     */
+ * làm lạilấy（dùng cholàm mớicache）
+ */
     public synchronized void refresh(ITaskService taskService) {
         initialized = false;
         initialize(taskService);
     }
     
     /**
-     * 检查是否已初始化
-     */
+ * kiểm tracóđãkhởi tạo
+ */
     public boolean isInitialized() {
         return initialized;
     }
     
     /**
-     * 清除缓存（用于测试或重置）
-     */
+ * xóacache（dùng chođothửhoặcreset）
+ */
     public synchronized void clear() {
         cachedInfo = null;
         initialized = false;

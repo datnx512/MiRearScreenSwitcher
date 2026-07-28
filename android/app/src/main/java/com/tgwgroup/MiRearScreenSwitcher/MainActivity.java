@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -40,7 +40,7 @@ public class MainActivity extends FlutterActivity {
     private static final String TAG = "MainActivity";
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
     
-    // 静态实例，供其他类访问
+    // instance static, chokhácloạitruy cập
     private static MainActivity currentInstance;
     
     public static MainActivity getCurrentInstance() {
@@ -56,7 +56,7 @@ public class MainActivity extends FlutterActivity {
             .debuggable(false)
             .version(1);
     
-    // Shizuku监听器（关键！）
+    // Shizuku listener（keyphím！）
     private final Shizuku.OnBinderReceivedListener binderReceivedListener = 
         () -> {
             bindTaskService();
@@ -66,20 +66,20 @@ public class MainActivity extends FlutterActivity {
         () -> {
             taskService = null;
             
-            // 启动重连任务
+            // khởi độngkết nối lạivụ
             scheduleReconnectTaskService();
         };
     
     /**
-     * TaskService重连任务
-     */
+ * TaskServicekết nối lạivụ
+ */
     private final Runnable reconnectTaskServiceRunnable = new Runnable() {
         @Override
         public void run() {
             if (taskService == null) {
                 bindTaskService();
                 
-                // 如果重连失败，2秒后再次尝试
+                // nếukết nối lại thất bại, 2giâysauthử lại lần nữa
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 30);
             } else {
             }
@@ -87,8 +87,8 @@ public class MainActivity extends FlutterActivity {
     };
     
     /**
-     * 安排TaskService重连
-     */
+ * xếpTaskServicekết nối lại
+ */
     private void scheduleReconnectTaskService() {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(reconnectTaskServiceRunnable, 30);
     };
@@ -99,7 +99,7 @@ public class MainActivity extends FlutterActivity {
             if (granted) {
                 bindTaskService();
             }
-            // 通知Flutter刷新状态
+            // thông báoFlutterlàm mớitrạng thái
             if (methodChannel != null) {
                 runOnUiThread(() -> {
                     methodChannel.invokeMethod("onShizukuPermissionChanged", granted);
@@ -144,18 +144,18 @@ public class MainActivity extends FlutterActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // 保存实例
+        // lưu instance
         currentInstance = this;
         
-        // 添加Shizuku监听器（关键！使用Sticky版本）
+        // thêm Shizuku listener（keyphím！sử dụngStickyphiên bản）
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener);
         Shizuku.addBinderDeadListener(binderDeadListener);
         Shizuku.addRequestPermissionResultListener(requestPermissionResultListener);
         
-        // 自动检查并请求Shizuku权限
+        // tự độngkiểm travàyêu cầuShizukuquyền
         checkAndRequestShizukuPermission();
         
-        // 处理通知Intent
+        // xử lýthông báoIntent
         handleIncomingIntent(getIntent());
     }
     
@@ -166,14 +166,14 @@ public class MainActivity extends FlutterActivity {
     }
     
     /**
-     * 处理来自Service的通知Intent
-     */
+ * xử lýtựServicethông báoIntent
+ */
     private void handleIncomingIntent(Intent intent) {
         if (intent == null) return;
         
         String action = intent.getAction();
         
-        // 处理通知Intent
+        // xử lýthông báoIntent
         if ("SHOW_NOTIFICATION_ON_REAR_SCREEN".equals(action)) {
             String packageName = intent.getStringExtra("packageName");
             String title = intent.getStringExtra("title");
@@ -186,8 +186,8 @@ public class MainActivity extends FlutterActivity {
     }
     
     /**
-     * 在背屏启动通知显示Activity
-     */
+ * ởmàn hình saukhởi độngthông báohiển thịActivity
+ */
     private void startNotificationOnRearScreen(String packageName, String title, String text, long when) {
         if (taskService == null) {
             Log.w(TAG, "TaskService not available for notification");
@@ -196,14 +196,14 @@ public class MainActivity extends FlutterActivity {
         
         new Thread(() -> {
             try {
-                // 步骤1: 禁用官方Launcher
+                // bước1: tắt Launcher chính thức
                 taskService.disableSubScreenLauncher();
                 
-                // 步骤2: 唤醒背屏
+                // bước2: đánh thứcmàn hình sau
                 taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
                 Thread.sleep(50);
                 
-                // 步骤3: 在主屏启动Activity
+                // bước3: ởmàn hình chính khởi độngActivity
                 String componentName = getPackageName() + "/" + RearScreenNotificationActivity.class.getName();
                 String mainCmd = String.format(
                     "am start -n %s --es packageName \"%s\" --es title \"%s\" --es text \"%s\" --el when %d",
@@ -214,7 +214,7 @@ public class MainActivity extends FlutterActivity {
                 );
                 taskService.executeShellCommand(mainCmd);
                 
-                // 步骤4: 轮询获取taskId
+                // bước4: poll lấy taskId
                 String notifTaskId = null;
                 int attempts = 0;
                 int maxAttempts = 20;
@@ -235,15 +235,15 @@ public class MainActivity extends FlutterActivity {
                 }
                 
                 if (notifTaskId != null) {
-                    // 步骤5: 移动到背屏
+                    // bước5: chuyển đến màn hình sau
                     String moveCmd = "service call activity_task 50 i32 " + notifTaskId + " i32 1";
                     taskService.executeShellCommand(moveCmd);
                     Thread.sleep(40);
                     
-                    // 步骤6: 检查是否锁屏，决定是否关闭主屏
+                    // bước6: kiểm tracókhóa màn hình, chắc chắncóđóng màn hình chính
                     android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
                     if (km != null && km.isKeyguardLocked()) {
-                        // 主屏休眠功能已移除
+                        // chức năng màn hình chính ngủđã gỡ
                         Log.d(TAG, "🔒 锁屏状态，主屏已关闭");
                     }
                     
@@ -259,8 +259,8 @@ public class MainActivity extends FlutterActivity {
     }
     
     /**
-     * 执行Shell命令（供RearScreenChargingActivity调用）
-     */
+ * Shelllệnh（choRearScreenChargingActivitygọi）
+ */
     public void executeShellCommand(String cmd) {
         if (taskService != null) {
             try {
@@ -290,7 +290,7 @@ public class MainActivity extends FlutterActivity {
     protected void onDestroy() {
         super.onDestroy();
         
-        // 清除静态实例
+        // xóa instance static
         currentInstance = null;
         
         Shizuku.removeBinderReceivedListener(binderReceivedListener);
@@ -359,7 +359,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "requestNotificationPermission": {
-                        // Android 13+ 需要请求通知权限
+                        // Android 13+ cầnyêu cầuthông báoquyền
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
                                 != PackageManager.PERMISSION_GRANTED) {
@@ -371,7 +371,7 @@ public class MainActivity extends FlutterActivity {
                                 result.success(null);
                             }
                         } else {
-                            // Android 12及以下不需要请求通知权限
+                            // Android 12bằngdướikhông cầnyêu cầuthông báoquyền
                             result.success(null);
                         }
                         break;
@@ -454,7 +454,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "openTutorial": {
-                        // 打开腾讯文档使用教程
+                        // mởvănsử dụngtrình
                         try {
                             Intent intent = new Intent(Intent.ACTION_VIEW);
                             intent.setData(android.net.Uri.parse("https://docs.qq.com/doc/DVWxpT3hQdHNPR3Zy?dver="));
@@ -469,7 +469,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "openDonationPage": {
-                        // 打开打赏页面
+                        // mởủng hộtrang
                         try {
                             Intent intent = new Intent(Intent.ACTION_VIEW);
                             intent.setData(android.net.Uri.parse("https://tgwgroup.ltd/2025/10/19/%e5%85%b3%e4%ba%8e%e6%89%93%e8%b5%8f/"));
@@ -484,7 +484,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "openQQGroup": {
-                        // 打开MRSS交流群页面
+                        // mởMRSSnhóm chattrang
                         try {
                             Intent intent = new Intent(Intent.ACTION_VIEW);
                             intent.setData(android.net.Uri.parse("https://tgwgroup.ltd/2025/10/21/%e5%85%b3%e4%ba%8emrss%e4%ba%a4%e6%b5%81%e7%be%a4/"));
@@ -499,10 +499,10 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "ensureTaskServiceConnected": {
-                        // 确保TaskService连接正常
+                        // đảm bảo TaskService kết nốibình thường
                         try {
                             if (taskService == null) {
-                                // 尝试重新绑定
+                                // thửlàm lạibind
                                 bindTaskService();
                             }
                             result.success(taskService != null);
@@ -545,33 +545,33 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "returnRearAppAndRestart": {
-                        // 重启前先拉回背屏应用
+                        // khởi động lạitrướctrướcquaymàn hình sauứng dụng
                         if (taskService != null) {
                             try {
-                                // 获取最后移动的任务信息
+                                // lấycuối cùngchuyểnthông tin task
                                 String lastTask = SwitchToRearTileService.getLastMovedTask();
                                 
                                 if (lastTask != null && lastTask.contains(":")) {
                                     String[] parts = lastTask.split(":");
                                     int taskId = Integer.parseInt(parts[1]);
                                     
-                                    // 检查任务是否还在背屏
+                                    // kiểm travụcóvẫnởmàn hình sau
                                     boolean onRear = taskService.isTaskOnDisplay(taskId, 1);
                                     
                                     if (onRear) {
-                                        // 拉回主屏
+                                        // quaymàn hình chính
                                         taskService.moveTaskToDisplay(taskId, 0);
                                         
-                                        // 恢复官方Launcher
+                                        // khôi phụcLauncher chính thức
                                         taskService.enableSubScreenLauncher();
                                         
                                         result.success(true);
                                     } else {
-                                        // 没有应用在背屏
+                                        // khôngcóứng dụngởmàn hình sau
                                         result.success(false);
                                     }
                                 } else {
-                                    // 没有记录
+                                    // khôngcóghi
                                     result.success(false);
                                 }
                             } catch (Exception e) {
@@ -585,10 +585,10 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setProximitySensorEnabled": {
-                        // V2.2: 设置接近传感器开关
+                        // V2.2: cài đặttiệm cậncông tắc cảm biến
                         boolean enabled = (boolean) call.argument("enabled");
                         
-                        // 通知RearScreenKeeperService更新状态
+                        // thông báoRearScreenKeeperServicecập nhậttrạng thái
                         Intent intent = new Intent(this, RearScreenKeeperService.class);
                         intent.setAction("ACTION_SET_PROXIMITY_ENABLED");
                         intent.putExtra("enabled", enabled);
@@ -599,10 +599,10 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setKeepScreenOnEnabled": {
-                        // V2.5: 设置背屏常亮开关
+                        // V2.5: cài đặtmàn hình saucông tắc giữ sáng
                         boolean enabled = (boolean) call.argument("enabled");
                         
-                        // 通知RearScreenKeeperService更新状态
+                        // thông báoRearScreenKeeperServicecập nhậttrạng thái
                         Intent intent = new Intent(this, RearScreenKeeperService.class);
                         intent.setAction("ACTION_SET_KEEP_SCREEN_ON_ENABLED");
                         intent.putExtra("enabled", enabled);
@@ -613,7 +613,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setAlwaysWakeUpEnabled": {
-                        // V3.5: 设置未投放应用时常亮开关
+                        // V3.5: cài đặtkhi chưa cast ứng dụng giữ sángcông tắc
                         boolean enabled = (boolean) call.argument("enabled");
                         
                         SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -633,13 +633,13 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setChargingAlwaysOnEnabled": {
-                        // V3.5: 设置充电动画常亮开关
+                        // V3.5: cài đặthoạt ảnh sạc giữ sángcông tắc
                         boolean enabled = (boolean) call.argument("enabled");
                         
                         SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
                         prefs.edit().putBoolean("charging_always_on_enabled", enabled).apply();
                         
-                        // 通知ChargingService重新加载设置
+                        // thông báoChargingServicetải lạicài đặt
                         sendBroadcast(new Intent("com.tgwgroup.MiRearScreenSwitcher.RELOAD_CHARGING_SETTINGS"));
                         
                         Log.d(TAG, "Charging always on set to: " + enabled);
@@ -648,7 +648,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "toggleChargingService": {
-                        // V2.3: 切换充电动画服务
+                        // V2.3: chuyểnhoạt ảnh sạcdịch vụ
                         boolean enabled = (boolean) call.argument("enabled");
                         
                         Intent intent = new Intent(this, ChargingService.class);
@@ -665,7 +665,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "startNotificationService": {
-                        // V2.4: 启动通知服务
+                        // V2.4: khởi độngthông báodịch vụ
                         Intent intent = new Intent(this, NotificationService.class);
                         startService(intent);
                         Log.d(TAG, "NotificationService started");
@@ -674,7 +674,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "toggleNotificationService": {
-                        // V2.4: 切换通知服务
+                        // V2.4: chuyểnthông báodịch vụ
                         boolean enabled = (boolean) call.argument("enabled");
                         
                         SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -683,12 +683,12 @@ public class MainActivity extends FlutterActivity {
                             .apply();
                         
                         if (enabled) {
-                            // 开启时启动服务
+                            // bậtthời giankhởi độngdịch vụ
                             Intent intent = new Intent(this, NotificationService.class);
                             startService(intent);
                             Log.d(TAG, "NotificationService started");
                         } else {
-                            // 关闭时停止服务
+                            // đóngthời giandừngdịch vụ
                             Intent intent = new Intent(this, NotificationService.class);
                             stopService(intent);
                             Log.d(TAG, "NotificationService stopped");
@@ -700,14 +700,14 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "checkNotificationListenerPermission": {
-                        // V2.4: 检查通知监听权限
+                        // V2.4: kiểm trathông báolắng nghequyền
                         boolean hasPermission = isNotificationListenerEnabled();
                         result.success(hasPermission);
                         break;
                     }
                     
                     case "openNotificationListenerSettings": {
-                        // V2.4: 打开通知监听设置
+                        // V2.4: mởthông báolắng nghecài đặt
                         try {
                             Intent intent = new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS");
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -721,7 +721,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "checkQueryAllPackagesPermission": {
-                        // V2.4: 检查QUERY_ALL_PACKAGES权限
+                        // V2.4: kiểm traQUERY_ALL_PACKAGESquyền
                         boolean hasPermission = checkSelfPermission("android.permission.QUERY_ALL_PACKAGES") == PackageManager.PERMISSION_GRANTED;
                         Log.d(TAG, "🔍 QUERY_ALL_PACKAGES permission check: " + hasPermission);
                         result.success(hasPermission);
@@ -729,7 +729,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "requestQueryAllPackagesPermission": {
-                        // V2.4: 请求QUERY_ALL_PACKAGES权限（跳转到应用详情页）
+                        // V2.4: yêu cầuQUERY_ALL_PACKAGESquyền（chuyển đếnứng dụngtrang）
                         try {
                             Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                             intent.setData(android.net.Uri.parse("package:" + getPackageName()));
@@ -744,10 +744,10 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "getInstalledApps": {
-                        // V2.4: 获取已安装应用列表（异步）
+                        // V2.4: lấyđãứng dụng（bất đồng bộ）
                         new Thread(() -> {
                             try {
-                                // 先检查权限
+                                // trướckiểm traquyền
                                 boolean hasPermission = checkSelfPermission("android.permission.QUERY_ALL_PACKAGES") == PackageManager.PERMISSION_GRANTED;
                                 if (!hasPermission) {
                                     Log.w(TAG, "⚠️ 没有QUERY_ALL_PACKAGES权限，应用列表可能不完整");
@@ -764,7 +764,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "getSelectedNotificationApps": {
-                        // V2.4: 获取已选择的通知应用
+                        // V2.4: lấyđãchọnthông báoứng dụng
                         try {
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
                             java.util.Set<String> selectedApps = prefs.getStringSet("notification_selected_apps", new java.util.HashSet<>());
@@ -777,7 +777,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setSelectedNotificationApps": {
-                        // V2.4: 保存选择的通知应用
+                        // V2.4: lưuchọnthông báoứng dụng
                         try {
                             @SuppressWarnings("unchecked")
                             java.util.List<String> selectedApps = (java.util.List<String>) call.arguments;
@@ -795,7 +795,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setNotificationPrivacyHideTitle": {
-                        // V3.2: 设置隐藏通知标题
+                        // V3.2: cài đặtẩnthông báotiêu đề
                         try {
                             boolean enabled = (boolean) call.argument("enabled");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -803,7 +803,7 @@ public class MainActivity extends FlutterActivity {
                                 .putBoolean("notification_privacy_hide_title", enabled)
                                 .apply();
                             
-                            // 通知NotificationService重新加载设置
+                            // thông báoNotificationServicetải lạicài đặt
                             sendBroadcast(new Intent("com.tgwgroup.MiRearScreenSwitcher.RELOAD_NOTIFICATION_SETTINGS"));
                             
                             Log.d(TAG, "Privacy hide title set to: " + enabled);
@@ -816,7 +816,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setNotificationPrivacyHideContent": {
-                        // V3.2: 设置隐藏通知内容
+                        // V3.2: cài đặtẩnthông báotrongchứa
                         try {
                             boolean enabled = (boolean) call.argument("enabled");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -824,7 +824,7 @@ public class MainActivity extends FlutterActivity {
                                 .putBoolean("notification_privacy_hide_content", enabled)
                                 .apply();
                             
-                            // 通知NotificationService重新加载设置
+                            // thông báoNotificationServicetải lạicài đặt
                             sendBroadcast(new Intent("com.tgwgroup.MiRearScreenSwitcher.RELOAD_NOTIFICATION_SETTINGS"));
                             
                             Log.d(TAG, "Privacy hide content set to: " + enabled);
@@ -837,7 +837,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setFollowDndMode": {
-                        // V3.0: 设置跟随系统勿扰模式
+                        // V3.0: cài đặttheohệ thốngKhông làm phiềnchế độ
                         try {
                             boolean enabled = (boolean) call.argument("enabled");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -854,7 +854,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setOnlyWhenLocked": {
-                        // V3.0: 设置仅倒扣手机时通知
+                        // V3.0: cài đặtúp màn hìnhtaythời gianthông báo
                         try {
                             boolean enabled = (boolean) call.argument("enabled");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -871,7 +871,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setNotificationDarkMode": {
-                        // V3.1: 设置通知暗夜模式
+                        // V3.1: cài đặtthông báochế độ tối
                         try {
                             boolean enabled = (boolean) call.argument("enabled");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -888,7 +888,7 @@ public class MainActivity extends FlutterActivity {
                     }
                     
                     case "setNotificationDuration": {
-                        // V3.4: 设置通知自动销毁时间
+                        // V3.4: cài đặtthông báotự độnghủythời gian
                         try {
                             int duration = (int) call.argument("duration");
                             SharedPreferences prefs = getSharedPreferences("mrss_settings", MODE_PRIVATE);
@@ -922,8 +922,8 @@ public class MainActivity extends FlutterActivity {
     }
     
     /**
-     * V2.4: 检查通知监听服务是否已启用
-     */
+ * V2.4: kiểm trathông báodịch vụ lắng nghecóđãbật
+ */
     private boolean isNotificationListenerEnabled() {
         String packageName = getPackageName();
         String flat = android.provider.Settings.Secure.getString(
@@ -946,8 +946,8 @@ public class MainActivity extends FlutterActivity {
     }
     
     /**
-     * V2.4: 获取已安装应用列表
-     */
+ * V2.4: lấyđãứng dụng
+ */
     private java.util.List<java.util.Map<String, Object>> getInstalledApps() {
         java.util.List<java.util.Map<String, Object>> apps = new java.util.ArrayList<>();
         
@@ -957,22 +957,22 @@ public class MainActivity extends FlutterActivity {
             
             Log.d(TAG, "Total packages found: " + packages.size());
             
-            // 使用白名单策略（用户应用 + 重要系统应用）
+            // sử dụngtênđơnchiến lược（người dùngứng dụng + nặngcầnhệ thốngứng dụng）
             java.util.Set<String> importantSystemApps = new java.util.HashSet<>();
-            importantSystemApps.add("com.tencent.mm"); // 微信
+            importantSystemApps.add("com.tencent.mm"); // 
             importantSystemApps.add("com.tencent.mobileqq"); // QQ
-            importantSystemApps.add("com.coolapk.market"); // 酷安
-            importantSystemApps.add("com.sina.weibo"); // 微博
-            importantSystemApps.add("com.taobao.taobao"); // 淘宝
-            importantSystemApps.add("com.eg.android.AlipayGphone"); // 支付宝
-            importantSystemApps.add("com.netease.cloudmusic"); // 网易云
-            importantSystemApps.add("com.ss.android.ugc.aweme"); // 抖音
-            importantSystemApps.add("com.bilibili.app.in"); // 哔哩哔哩
-            importantSystemApps.add("com.android.mms"); // 短信
-            importantSystemApps.add("com.android.contacts"); // 联系人
+            importantSystemApps.add("com.coolapk.market"); // CoolApk
+            importantSystemApps.add("com.sina.weibo"); // 
+            importantSystemApps.add("com.taobao.taobao"); // 
+            importantSystemApps.add("com.eg.android.AlipayGphone"); // 
+            importantSystemApps.add("com.netease.cloudmusic"); // 
+            importantSystemApps.add("com.ss.android.ugc.aweme"); // 
+            importantSystemApps.add("com.bilibili.app.in"); // 
+            importantSystemApps.add("com.android.mms"); // ngắn
+            importantSystemApps.add("com.android.contacts"); // hệ
             
             for (android.content.pm.ApplicationInfo appInfo : packages) {
-                // 跳过自己
+                // bỏ quatự
                 if (appInfo.packageName.equals(getPackageName())) {
                     continue;
                 }
@@ -981,7 +981,7 @@ public class MainActivity extends FlutterActivity {
                 boolean isUserApp = !isSystemApp;
                 boolean isImportantSystemApp = importantSystemApps.contains(appInfo.packageName);
                 
-                // 只包含用户应用或重要系统应用
+                // chỉgóingười dùngứng dụnghoặcnặngcầnhệ thốngứng dụng
                 if (!isUserApp && !isImportantSystemApp) {
                     continue;
                 }
@@ -989,14 +989,14 @@ public class MainActivity extends FlutterActivity {
                 java.util.Map<String, Object> app = new java.util.HashMap<>();
                 app.put("appName", pm.getApplicationLabel(appInfo).toString());
                 app.put("packageName", appInfo.packageName);
-                app.put("isSystemApp", isSystemApp);  // V3.3: 添加系统应用标志
+                app.put("isSystemApp", isSystemApp);  // V3.3: thêmhệ thốngứng dụngđánh dấuchí
                 
-                // 获取应用图标（全分辨率，不压缩不受损）
+                // lấy ứng dụngicon（toànđộ phân giải, khôngkhông）
                 try {
                     Drawable icon = pm.getApplicationIcon(appInfo);
-                    // 使用原始图标尺寸，不限制大小
+                    // sử dụngnguyênbắt đầuicon, khônggiới hạnlớnnhỏ
                     int iconSize = Math.max(icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
-                    if (iconSize <= 0) iconSize = 192; // 如果无法获取，使用默认高分辨率
+                    if (iconSize <= 0) iconSize = 192; // nếukhông cópháplấy, sử dụngmặc địnhcaođộ phân giải
                     
                     android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(
                         iconSize, iconSize, android.graphics.Bitmap.Config.ARGB_8888
@@ -1006,7 +1006,7 @@ public class MainActivity extends FlutterActivity {
                     icon.draw(canvas);
                     
                     java.io.ByteArrayOutputStream stream = new java.io.ByteArrayOutputStream();
-                    bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream); // 100%质量，无损压缩
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream); // 100%lượng, không có
                     app.put("icon", stream.toByteArray());
                     
                     bitmap.recycle();
@@ -1017,7 +1017,7 @@ public class MainActivity extends FlutterActivity {
                 apps.add(app);
             }
             
-            // 按应用名排序
+            // theotên ứng dụngsắp xếp
             apps.sort((a, b) -> {
                 String nameA = (String) a.get("appName");
                 String nameB = (String) b.get("appName");

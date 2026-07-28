@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -23,8 +23,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 /**
- * Quick Settings Tile - 背屏录屏
- * 点击后显示/隐藏录屏悬浮窗
+ * Quick Settings Tile - màn hình sauquay màn hình
+ * nhấpsau hiển thị/ẩnquay màn hìnhoverlay window
  */
 public class RearScreenRecordTileService extends TileService {
     private static final String TAG = "RearScreenRecordTile";
@@ -35,7 +35,7 @@ public class RearScreenRecordTileService extends TileService {
         
         Tile tile = getQsTile();
         if (tile != null) {
-            // 检查悬浮窗是否正在显示
+            // kiểm traoverlay windowcóđanghiển thị
             boolean isRecording = ScreenRecordService.isRunning();
             tile.setState(isRecording ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
             tile.updateTile();
@@ -47,13 +47,13 @@ public class RearScreenRecordTileService extends TileService {
         super.onClick();
         
         unlockAndRun(() -> {
-            // 检查悬浮窗权限
+            // kiểm traoverlay windowquyền
             if (!Settings.canDrawOverlays(this)) {
                 Log.w(TAG, "无悬浮窗权限");
                 
                 Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_LONG).show();
                 
-                // 跳转到权限设置页面
+                // chuyển đếnquyềncài đặttrang
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
                 intent.setData(android.net.Uri.parse("package:" + getPackageName()));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -62,20 +62,20 @@ public class RearScreenRecordTileService extends TileService {
                 return;
             }
             
-            // 检查是否已在运行
+            // kiểm tracóđã ở
             if (ScreenRecordService.isRunning()) {
-                // 已有悬浮窗，收起悬浮窗（停止服务）
+                // đãcóoverlay window, thu gọnoverlay window（dừngdịch vụ）
                 stopService(new Intent(this, ScreenRecordService.class));
                 Log.d(TAG, "✓ 录屏悬浮窗已关闭");
                 
-                // 更新Tile状态
+                // cập nhậtTiletrạng thái
                 Tile tile = getQsTile();
                 if (tile != null) {
                     tile.setState(Tile.STATE_INACTIVE);
                     tile.updateTile();
                 }
             } else {
-                // 启动录屏服务（显示悬浮窗）
+                // khởi độngquay màn hìnhdịch vụ（hiển thịoverlay window）
                 Intent intent = new Intent(this, ScreenRecordService.class);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(intent);
@@ -85,7 +85,7 @@ public class RearScreenRecordTileService extends TileService {
                 
                 Log.d(TAG, "✓ 录屏悬浮窗已启动");
                 
-                // 更新Tile状态
+                // cập nhậtTiletrạng thái
                 Tile tile = getQsTile();
                 if (tile != null) {
                     tile.setState(Tile.STATE_ACTIVE);

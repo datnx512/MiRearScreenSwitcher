@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -22,22 +22,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 背屏显示信息辅助类
- * 通过 dumpsys display 获取背屏分辨率、DPI、Cutout信息
+ * màn hình sauhiển thịthông tinloại
+ * qua dumpsys display lấymàn hình sauđộ phân giải、DPI、Cutoutthông tin
  */
 public class RearDisplayHelper {
     private static final String TAG = "RearDisplayHelper";
     
     /**
-     * 背屏信息数据类
-     */
+ * thông tin màn hình saudữ liệuloại
+ */
     public static class RearDisplayInfo {
-        public int width;           // 屏幕宽度（像素）
-        public int height;          // 屏幕高度（像素）
+        public int width;           // màn hìnhđộ rộng（pixel）
+        public int height;          // màn hìnhđộ cao（pixel）
         public int densityDpi;      // DPI
-        public Rect cutout;         // Cutout区域（insets格式）        
+        public Rect cutout;         // Cutoutphân vùng（insetsthức） 
         public RearDisplayInfo() {
-            // 默认值（小米14 Ultra背屏）            width = 1200;
+            // giá trị mặc định（nhỏ14 Ultramàn hình sau） width = 1200;
             height = 2200;
             densityDpi = 440;
             cutout = new Rect(0, 0, 0, 0);
@@ -50,16 +50,16 @@ public class RearDisplayHelper {
         }
         
         /**
-         * 判断是否有cutout
-         */
+ * kiểm tracócócutout
+ */
         public boolean hasCutout() {
             return cutout.left > 0 || cutout.top > 0 || cutout.right > 0 || cutout.bottom > 0;
         }
     }
     
     /**
-     * 获取背屏信息（通过TaskService）
-     */
+ * lấythông tin màn hình sau（qua TaskService）
+ */
     public static RearDisplayInfo getRearDisplayInfo(ITaskService taskService) {
         RearDisplayInfo info = new RearDisplayInfo();
         
@@ -69,19 +69,19 @@ public class RearDisplayHelper {
         }
         
         try {
-            // 执行 dumpsys display 命令
+            // dumpsys display lệnh
             String result = taskService.executeShellCommandWithResult("dumpsys display");
             if (result == null || result.isEmpty()) {
                 Log.w(TAG, "⚠️ dumpsys display返回为空，使用默认背屏信息");
                 return info;
             }
             
-            // 🔍 详细日志：输出完整的dumpsys display结果（前2000字符）
+            // 🔍 log：xuấthoàn toàndumpsys displaykết quả（trước2000chữ）
             String preview = result.length() > 2000 ? result.substring(0, 2000) : result;
             Log.d(TAG, "📋 dumpsys display 完整输出（前2000字符）：\n" + preview);
             Log.d(TAG, "📏 dumpsys display 总长度: " + result.length() + " 字符");
             
-            // 解析背屏信息（Display 1）
+            // parsethông tin màn hình sau（Display 1）
             parseRearDisplayInfo(result, info);
             
             Log.d(TAG, "✓ 背屏信息: " + info.toString());
@@ -94,11 +94,11 @@ public class RearDisplayHelper {
     }
     
     /**
-     * 解析 dumpsys display 输出
-     */
+ * parse dumpsys display xuất
+ */
     private static void parseRearDisplayInfo(String dumpsys, RearDisplayInfo info) {
         try {
-            // 方法1: 从 mViewports 中解析（最准确）
+            // phương thức1: từ mViewports trongparse（tối ưuchắc chắn）
             Pattern viewportPattern = Pattern.compile(
                 "displayId=1[^}]*deviceWidth=(\\d+),\\s*deviceHeight=(\\d+)"
             );
@@ -109,12 +109,12 @@ public class RearDisplayHelper {
                 Log.d(TAG, String.format("✓ 从mViewports解析分辨率: %dx%d", info.width, info.height));
             }
             
-            // 方法2: 查找Display 1的DisplayDeviceInfo区块（包含cutout）
-            // 搜索 uniqueId="local:4630946949513469332" (Display 1的唯一标识)
-            // 或者搜索包含 "904 x 572" 的 DisplayDeviceInfo
+            // phương thức2: traDisplay 1DisplayDeviceInfophân vùng（góicutout）
+            // tìm kiếm uniqueId="local:4630946949513469332" (Display 1mộtđánh dấu)
+            // hoặctìm kiếmgói "904 x 572" DisplayDeviceInfo
             int display1DeviceStart = -1;
             
-            // 先尝试找到包含 displayId=1 的 DisplayViewport 来获取 uniqueId
+            // trướcthửđếngói displayId=1 DisplayViewport lấy uniqueId
             Pattern uniqueIdPattern = Pattern.compile("displayId=1[^}]*uniqueId='([^']+)'");
             Matcher uniqueIdMatcher = uniqueIdPattern.matcher(dumpsys);
             String display1UniqueId = null;
@@ -123,13 +123,13 @@ public class RearDisplayHelper {
                 Log.d(TAG, "🔍 Display 1 uniqueId: " + display1UniqueId);
             }
             
-            // 用uniqueId或分辨率来定位Display 1的DisplayDeviceInfo
+            // người dùnguniqueIdhoặcđộ phân giảichắc chắnDisplay 1DisplayDeviceInfo
             int searchPos = 0;
             while (true) {
                 int idx = dumpsys.indexOf("DisplayDeviceInfo", searchPos);
                 if (idx == -1) break;
                 
-                // 检查接下来2000字符内是否有匹配条件
+                // kiểm tratiếpdưới2000chữtrongcócóphân phốiphần
                 int checkEnd = Math.min(idx + 2000, dumpsys.length());
                 String snippet = dumpsys.substring(idx, checkEnd);
                 
@@ -137,7 +137,7 @@ public class RearDisplayHelper {
                 if (display1UniqueId != null && snippet.contains(display1UniqueId)) {
                     isDisplay1 = true;
                 } else if (snippet.contains(info.width + " x " + info.height)) {
-                    // 用已解析的分辨率匹配（904 x 572）
+                    // người dùngđãparseđộ phân giảiphân phối（904 x 572）
                     isDisplay1 = true;
                 }
                 
@@ -150,7 +150,7 @@ public class RearDisplayHelper {
             
             String display1Block = "";
             if (display1DeviceStart != -1) {
-                // 找到下一个 "DisplayDeviceInfo" 作为结束
+                // đếndướimộtcái "DisplayDeviceInfo" làmlàkết thúc
                 int nextBlockIdx = dumpsys.indexOf("DisplayDeviceInfo", display1DeviceStart + 17);
                 
                 display1Block = nextBlockIdx > 0 
@@ -159,18 +159,18 @@ public class RearDisplayHelper {
                 
                 Log.d(TAG, "🔍 Display 1 DisplayDeviceInfo区块长度: " + display1Block.length() + " 字符");
                 
-                // 输出前600字符用于调试
+                // xuấttrước600chữdùng chodebug
                 String preview = display1Block.length() > 600 
                     ? display1Block.substring(0, 600) 
                     : display1Block;
                 Log.d(TAG, "📋 Display 1 DisplayDeviceInfo区块（前600字符）：\n" + preview);
             } else {
                 Log.w(TAG, "⚠️ 未找到Display 1的DisplayDeviceInfo区块");
-                display1Block = ""; // 不回退到全文，避免误匹配主屏数据
+                display1Block = ""; // khôngquaylùiđếntoànvăn, tránhsaiphân phốimàn hình chínhdữ liệu
             }
             
-            // 解析DPI（从DisplayDeviceInfo区块）
-            // 格式: density 450
+            // parseDPI（từDisplayDeviceInfophân vùng）
+            // thức: density 450
             if (!display1Block.isEmpty()) {
                 Pattern dpiPattern = Pattern.compile("density\\s+(\\d+)");
                 Matcher dpiMatcher = dpiPattern.matcher(display1Block);
@@ -180,9 +180,9 @@ public class RearDisplayHelper {
                 }
             }
             
-            // 解析Cutout（MIUI特殊格式）
-            // 格式: DisplayCutout{insets=Rect(296, 0 - 0, 0)
-            // 注意：MIUI用 "top - right" 而不是 "top, right"
+            // parseCutout（MIUIthức）
+            // thức: DisplayCutout{insets=Rect(296, 0 - 0, 0)
+            // chú ý：MIUIngười dùng "top - right" màkhônglà "top, right"
             info.cutout = parseCutoutFromDumpsys(display1Block);
             
         } catch (Exception e) {
@@ -191,13 +191,13 @@ public class RearDisplayHelper {
     }
     
     /**
-     * 解析Cutout信息（MIUI特殊格式）
-     */
+ * parseCutoutthông tin（MIUIthức）
+ */
     private static Rect parseCutoutFromDumpsys(String display1Block) {
         Rect cutout = new Rect(0, 0, 0, 0);
         
         try {
-            // 🔍 查找所有包含 "Cutout" 或 "cutout" 的行
+            // 🔍 trasởcógói "Cutout" hoặc "cutout" 
             String[] lines = display1Block.split("\n");
             StringBuilder cutoutLines = new StringBuilder("📋 所有Cutout相关行：\n");
             boolean foundCutout = false;
@@ -213,11 +213,11 @@ public class RearDisplayHelper {
                 Log.d(TAG, "ℹ️ Display 1区块中未找到任何包含'Cutout'的行");
             }
             
-            // MIUI格式: Rect(296, 0 - 0, 0)
-            // 标准格式: Rect(left, top, right, bottom)
-            // MIUI格式: Rect(left, top - right, bottom)
+            // MIUIthức: Rect(296, 0 - 0, 0)
+            // đánh dấuthức: Rect(left, top, right, bottom)
+            // MIUIthức: Rect(left, top - right, bottom)
             
-            // 先尝试MIUI格式（有短横线）
+            // trướcthửMIUIthức（cóngắntuyến）
             Pattern miuiPattern = Pattern.compile("DisplayCutout\\{insets=Rect\\((\\d+),\\s*(\\d+)\\s*-\\s*(\\d+),\\s*(\\d+)\\)");
             Matcher miuiMatcher = miuiPattern.matcher(display1Block);
             
@@ -231,7 +231,7 @@ public class RearDisplayHelper {
                 return cutout;
             }
             
-            // 再尝试标准格式（无短横线）
+            // lạithửđánh dấuthức（không cóngắntuyến）
             Pattern standardPattern = Pattern.compile("DisplayCutout\\{insets=Rect\\((\\d+),\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)");
             Matcher standardMatcher = standardPattern.matcher(display1Block);
             
@@ -245,7 +245,7 @@ public class RearDisplayHelper {
                 return cutout;
             }
             
-            // 尝试更宽松的模式（任何包含Rect的Cutout）
+            // thửhơnrộngchế độ（góiRectCutout）
             Pattern loosePattern = Pattern.compile("cutout.*?Rect\\(([^)]+)\\)", Pattern.CASE_INSENSITIVE);
             Matcher looseMatcher = loosePattern.matcher(display1Block);
             if (looseMatcher.find()) {

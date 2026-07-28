@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -32,8 +32,8 @@ import android.util.Log;
 import rikka.shizuku.Shizuku;
 
 /**
- * 充电状态监听服务
- * 监听电源连接事件，插电后在背屏显示充电电量动画
+ * dịch vụ lắng nghe trạng thái sạc
+ * lắng nghe sự kiện kết nối nguồn, sau khi cắm điện ở màn hình sau hiển thị hoạt ảnh pin sạc
  */
 public class ChargingService extends Service {
     private static final String TAG = "ChargingService";
@@ -41,14 +41,14 @@ public class ChargingService extends Service {
     private ITaskService taskService;
     private PowerManager.WakeLock wakeLock;
     
-    // 静态实例，供RearScreenChargingActivity访问
+    // instance static, cho RearScreenChargingActivity truy cập
     private static ChargingService instance;
     
-    // 防止重复触发动画（冷却时间）
+    // ngăn kích hoạt lặphoạt ảnh（thời gian chờ）
     private long lastChargingAnimationTime = 0;
-    private static final long CHARGING_ANIMATION_COOLDOWN_MS = 6000; // 6秒冷却时间
+    private static final long CHARGING_ANIMATION_COOLDOWN_MS = 6000; // 6giâythời gian chờ
     
-    // V3.5: 充电动画常亮模式
+    // V3.5: chế độ hoạt ảnh sạc giữ sáng
     private boolean chargingAlwaysOnEnabled = false;
     private Handler wakeupHandler;
     private Runnable wakeupRunnable;
@@ -71,7 +71,7 @@ public class ChargingService extends Service {
             Log.d(TAG, "✓ TaskService connected");
             taskService = ITaskService.Stub.asInterface(binder);
             
-            // 初始化显示屏信息缓存
+            // khởi tạocache thông tin màn hình
             try {
                 DisplayInfoCache.getInstance().initialize(taskService);
             } catch (Exception e) {
@@ -83,7 +83,7 @@ public class ChargingService extends Service {
         public void onServiceDisconnected(ComponentName name) {
             Log.d(TAG, "✗ TaskService disconnected");
             taskService = null;
-            // 自动重连
+            // tự động kết nối lại
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 if (taskService == null) {
                     bindTaskService();
@@ -92,7 +92,7 @@ public class ChargingService extends Service {
         }
     };
     
-    // Shizuku监听器
+    // Shizuku listener
     private final Shizuku.OnBinderReceivedListener binderReceivedListener = 
         () -> {
             Log.d(TAG, "Shizuku binder received");
@@ -103,13 +103,13 @@ public class ChargingService extends Service {
         () -> {
             Log.d(TAG, "Shizuku binder dead");
             taskService = null;
-            // 尝试重连
+            // thử kết nối lại
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 bindTaskService();
             }, 1000);
         };
     
-    // V3.5: 设置变化广播接收器
+    // V3.5: broadcast receiver thay đổi cài đặt
     private BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -119,26 +119,26 @@ public class ChargingService extends Service {
         }
     };
     
-    // V3.5: 恢复充电动画广播接收器
+    // V3.5: broadcast receiver khôi phục hoạt ảnh sạc
     private BroadcastReceiver resumeChargingReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if ("com.tgwgroup.MiRearScreenSwitcher.RESUME_CHARGING_ANIMATION".equals(intent.getAction())) {
                 Log.d(TAG, "🔋 收到恢复充电动画广播，准备恢复");
                 
-                // 获取当前电量
+                // lấy pin hiện tại
                 int batteryLevel = getBatteryLevel(context);
                 
-                // 延迟后重新启动充电动画
+                // sau khi trễ khởi động lại hoạt ảnh sạc
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     try {
-                        // 通知动画管理器：开始充电动画
+                        // thông báo animation manager: bắt đầu hoạt ảnh sạc
                         RearAnimationManager.startAnimation(RearAnimationManager.AnimationType.CHARGING);
                         
-                        // 启动充电动画
+                        // khởi độnghoạt ảnh sạc
                         showChargingOnRearScreen(batteryLevel, false);
                         
-                        // 如果常亮模式开启，启动唤醒循环
+                        // nếu chế độ giữ sáng bật, khởi động vòng lặp đánh thức
                         if (chargingAlwaysOnEnabled) {
                             Log.d(TAG, "💡 常亮模式开启，启动wakeup循环");
                             startWakeupAndUpdateLoop();
@@ -146,7 +146,7 @@ public class ChargingService extends Service {
                     } catch (Exception e) {
                         Log.e(TAG, "恢复充电动画失败", e);
                     }
-                }, 300);  // 300ms延迟，确保通知Activity完全销毁
+                }, 300);  // trễ 300ms, đảm bảo Activity thông báo hủy hoàn toàn
             }
         }
     };
@@ -157,21 +157,21 @@ public class ChargingService extends Service {
             String action = intent.getAction();
             
             if (Intent.ACTION_POWER_CONNECTED.equals(action)) {
-                // 检查开关状态
+                // kiểm tra trạng thái công tắc
                 boolean enabled = prefs.getBoolean("charging_animation_enabled", true);
                 if (!enabled) {
                     Log.d(TAG, "Charging animation disabled");
                     return;
                 }
                 
-                // 检查冷却时间（防止重复触发）
+                // kiểm tra thời gian chờ (ngăn kích hoạt lặp)
                 long currentTime = System.currentTimeMillis();
                 if (currentTime - lastChargingAnimationTime < CHARGING_ANIMATION_COOLDOWN_MS) {
                     Log.d(TAG, "⏸ Charging animation in cooldown, skipping");
                     return;
                 }
                 
-                // 检查屏幕锁定状态
+                // kiểm tra trạng thái khóa màn hình
                 android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
                 boolean isLocked = km != null && km.isKeyguardLocked();
                 
@@ -184,13 +184,13 @@ public class ChargingService extends Service {
                 int batteryLevel = getBatteryLevel(context);
                 Log.d(TAG, "🔌 Power connected, battery: " + batteryLevel + "%");
                 
-                // 记录触发时间
+                // ghi thời điểm kích hoạt
                 lastChargingAnimationTime = currentTime;
                 
-                // 通知动画管理器：开始充电动画（返回被打断的旧动画）
+                // thông báo animation manager: bắt đầu hoạt ảnh sạc (trả về hoạt ảnh cũ bị ngắt)
                 RearAnimationManager.AnimationType oldAnim = RearAnimationManager.startAnimation(RearAnimationManager.AnimationType.CHARGING);
                 
-                // 如果有旧动画需要打断，发送打断广播
+                // nếu có hoạt ảnh cũ cần ngắt, gửi broadcast ngắt
                 if (oldAnim == RearAnimationManager.AnimationType.NOTIFICATION) {
                     Log.d(TAG, "检测到通知动画正在播放，发送打断广播");
                     RearAnimationManager.sendInterruptBroadcast(ChargingService.this, RearAnimationManager.AnimationType.NOTIFICATION);
@@ -198,16 +198,16 @@ public class ChargingService extends Service {
                 
                 showChargingOnRearScreen(batteryLevel, isLocked);
                 
-                // V3.5: 如果开启了充电动画常亮，启动唤醒和更新循环
+                // V3.5: nếu đã bật hoạt ảnh sạc giữ sáng, khởi động vòng lặp đánh thức và cập nhật
                 if (chargingAlwaysOnEnabled) {
                     Log.d(TAG, "充电动画常亮已开启，启动wakeup循环");
                     startWakeupAndUpdateLoop();
                 }
             } else if (Intent.ACTION_POWER_DISCONNECTED.equals(action)) {
-                // 拔掉充电器，立即销毁充电动画
+                // rút bộ sạc, hủy hoạt ảnh sạc ngay
                 Log.d(TAG, "🔌 Power disconnected, finishing charging animation");
                 
-                // V3.5: 停止唤醒循环
+                // V3.5: dừng vòng lặp đánh thức
                 stopWakeupLoop();
                 
                 finishChargingAnimation();
@@ -220,21 +220,21 @@ public class ChargingService extends Service {
         super.onCreate();
         Log.d(TAG, "ChargingService created");
         
-        // 保存实例
+        // lưu instance
         instance = this;
         
         prefs = getSharedPreferences("mrss_settings", Context.MODE_PRIVATE);
         
-        // 添加Shizuku监听器
+        // thêm Shizuku listener
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener);
         Shizuku.addBinderDeadListener(binderDeadListener);
         
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_POWER_CONNECTED);
-        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);  // 监听拔电事件
+        filter.addAction(Intent.ACTION_POWER_DISCONNECTED);  // lắng nghe sự kiện rút điện
         registerReceiver(batteryReceiver, filter);
         
-        // V3.5: 注册设置变化广播接收器
+        // V3.5: đăng ký broadcast receiver thay đổi cài đặt
         IntentFilter settingsFilter = new IntentFilter("com.tgwgroup.MiRearScreenSwitcher.RELOAD_CHARGING_SETTINGS");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(settingsReceiver, settingsFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -242,7 +242,7 @@ public class ChargingService extends Service {
             registerReceiver(settingsReceiver, settingsFilter);
         }
         
-        // V3.5: 注册恢复充电动画广播接收器
+        // V3.5: đăng ký broadcast receiver khôi phục hoạt ảnh sạc
         IntentFilter resumeFilter = new IntentFilter("com.tgwgroup.MiRearScreenSwitcher.RESUME_CHARGING_ANIMATION");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(resumeChargingReceiver, resumeFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -250,19 +250,19 @@ public class ChargingService extends Service {
             registerReceiver(resumeChargingReceiver, resumeFilter);
         }
         
-        // V3.5: 加载充电动画常亮设置
+        // V3.5: tải cài đặt hoạt ảnh sạc giữ sáng
         chargingAlwaysOnEnabled = prefs.getBoolean("charging_always_on_enabled", false);
         wakeupHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         
-        // 绑定TaskService
+        // bind TaskService
         bindTaskService();
         
-        // 启动前台服务保活（使用统一的内核服务通知）
+        // khởi động foreground servicegiữ sống (sử dụng thống nhất thông báo kernel service)
         startForeground(NOTIFICATION_ID, RearScreenKeeperService.createServiceNotification(this));
         Log.d(TAG, "✓ 前台服务已启动（使用内核服务通知）");
     }
     
-    private static final int NOTIFICATION_ID = 1001; // 与其他Service共用ID
+    private static final int NOTIFICATION_ID = 1001; // và Service khác cùng dùng ID
 
     private void acquireWakeLock(long timeoutMs) {
         try {
@@ -297,7 +297,7 @@ public class ChargingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "ChargingService started");
         
-        // 确保TaskService已绑定
+        // đảm bảo TaskService đã bind
         if (taskService == null) {
             bindTaskService();
         }
@@ -330,11 +330,11 @@ public class ChargingService extends Service {
     }
     
     /**
-     * 立即结束充电动画
-     */
+ * kết thúc hoạt ảnh sạc ngay
+ */
     private void finishChargingAnimation() {
         try {
-            // 通过广播通知RearScreenChargingActivity立即结束
+            // qua broadcast thông báo RearScreenChargingActivity kết thúc ngay
             Intent finishIntent = new Intent("com.tgwgroup.MiRearScreenSwitcher.FINISH_CHARGING_ANIMATION");
             finishIntent.setPackage(getPackageName());
             sendBroadcast(finishIntent);
@@ -350,9 +350,9 @@ public class ChargingService extends Service {
     
     private void showChargingOnRearScreenWithRetry(int level, boolean isLocked, int retryCount) {
         if (taskService == null) {
-            if (retryCount < 10) {  // 最多重试10次（总共1秒）
+            if (retryCount < 10) {  // tối đa thử lại 10 lần（tổng cộng 1 giây）
                 Log.w(TAG, "TaskService not available, retry " + (retryCount + 1) + "/10");
-                // 延迟重试
+                // thử lại trễ
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     showChargingOnRearScreenWithRetry(level, isLocked, retryCount + 1);
                 }, 100);
@@ -365,7 +365,7 @@ public class ChargingService extends Service {
         
         acquireWakeLock(8000);
         try {
-            // 步骤1: 检查背屏是否有投送的应用
+            // bước1: kiểm tra màn hình sau có ứng dụng cast
             String lastTask = SwitchToRearTileService.getLastMovedTask();
             int rearTaskId = -1;
             
@@ -373,13 +373,13 @@ public class ChargingService extends Service {
                 try {
                     String rearForegroundApp = taskService.getForegroundAppOnDisplay(1);
                     
-                    // 如果当前背屏前台是充电动画，说明上一次动画还没完全销毁，使用lastTask
+                    // nếuhiện tạimàn hình sau foregroundlàhoạt ảnh sạc, giải thíchtrênmột lầnhoạt ảnhvẫnkhônghủy hoàn toàn, sử dụnglastTask
                     if (rearForegroundApp != null && rearForegroundApp.contains("RearScreenChargingActivity")) {
                         Log.d(TAG, "充电动画正在显示，使用lastTask: " + lastTask);
                         String[] parts = lastTask.split(":");
                         rearTaskId = Integer.parseInt(parts[1]);
                     } else if (rearForegroundApp != null && rearForegroundApp.equals(lastTask)) {
-                        // 背屏确实有投送的app在运行
+                        // màn hình sauchắc chắnthựccó app castở
                         String[] parts = lastTask.split(":");
                         rearTaskId = Integer.parseInt(parts[1]);
                         Log.d(TAG, "背屏有投送app: " + lastTask);
@@ -389,22 +389,22 @@ public class ChargingService extends Service {
                 }
             }
             
-            // 步骤2: 如果有投送app，暂停RearScreenKeeperService的监控
+            // bước2: nếu cóapp cast, tạm dừng giám sát RearScreenKeeperService
             if (rearTaskId > 0) {
                 RearScreenKeeperService.pauseMonitoring();
             }
             
-            // 步骤3: 禁用官方Launcher
+            // bước3: tắt Launcher chính thức
             taskService.disableSubScreenLauncher();
             
             long startTime = System.currentTimeMillis();
             Log.d(TAG, String.format("[%tT.%tL] 开始启动充电动画", startTime, startTime));
             
-            // V3.3: 移除所有唤醒和解锁代码，避免锁屏时跳转到密码界面
+            // V3.3: gỡ bỏ tất cả code đánh thức và mở khóa, tránh khi khóa màn hình chuyển đến giao diện mật khẩu
             
-            // 步骤4: 使用MRSN的策略 - 先在主屏隐形启动，然后移动到背屏
+            // bước4: sử dụng chiến lược MRSN - tr tiên ở màn hình chính tàng hình khởi động, sau đóchuyển đến màn hình sau
             try {
-                // 4.1: 先在主屏启动（Activity会在onCreate自动隐藏）
+                // 4.1: tr tiên ở màn hình chính khởi động（Activity sẽ tự ẩn ở onCreate）
                 String componentName = getPackageName() + "/" + RearScreenChargingActivity.class.getName();
                 String mainCmd = String.format(
                     "am start -n %s --ei batteryLevel %d --ei rearTaskId %d",
@@ -416,7 +416,7 @@ public class ChargingService extends Service {
                 Log.d(TAG, String.format("[%tT.%tL] 🔵 在主屏启动Activity", System.currentTimeMillis(), System.currentTimeMillis()));
                 taskService.executeShellCommand(mainCmd);
                 
-                // 4.2: 轮询获取taskId（最多60次 x 30ms = 1800ms，期间重发命令）
+                // 4.2: poll lấy taskId（tối đa 60 lần x 30ms = 1800ms, trong thời gian gửi lại lệnh）
                 String chargingTaskId = null;
                 int attempts = 0;
                 int maxAttempts = 60;
@@ -425,7 +425,7 @@ public class ChargingService extends Service {
                     Thread.sleep(30);
                     String result = taskService.executeShellCommandWithResult("am stack list | grep RearScreenChargingActivity");
                     if (result != null && !result.trim().isEmpty()) {
-                        // 解析 taskId=XXX
+                        // parse taskId=XXX
                         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("taskId=(\\d+)");
                         java.util.regex.Matcher matcher = pattern.matcher(result);
                         if (matcher.find()) {
@@ -436,21 +436,21 @@ public class ChargingService extends Service {
                         }
                     }
                     attempts++;
-                    if (attempts == 20 || attempts == 40) { // 中途重发一到两次启动命令
+                    if (attempts == 20 || attempts == 40) { // giữa chừnggửi lại một hai lần lệnh khởi động
                         Log.d(TAG, String.format("[%tT.%tL] 重新发送主屏启动命令", System.currentTimeMillis(), System.currentTimeMillis()));
                         taskService.executeShellCommand(mainCmd);
                     }
                 }
                 
                 if (chargingTaskId != null) {
-                    // 4.3: 移动到背屏
+                    // 4.3: chuyển đến màn hình sau
                     String moveCmd = "service call activity_task 50 i32 " + chargingTaskId + " i32 1";
                     taskService.executeShellCommand(moveCmd);
-                    Thread.sleep(40); // 等待移动完成
+                    Thread.sleep(40); // chờ chuyển xong
                     
-                    // 4.4: 只在锁屏时关闭主屏（亮屏时不需要关闭）
+                    // 4.4: chỉ khi khóa màn hình đóng màn hình chính（khi sáng màn hình không cần đóng）
                     if (isLocked) {
-                        // 主屏休眠功能已移除
+                        // chức năng màn hình chính ngủđã gỡ
                         Log.d(TAG, String.format("[%tT.%tL] 锁屏状态，主屏已关闭", 
                             System.currentTimeMillis(), System.currentTimeMillis()));
                     } else {
@@ -480,13 +480,13 @@ public class ChargingService extends Service {
     public void onDestroy() {
         super.onDestroy();
         
-        // 停止前台服务
+        // dừng foreground service
         stopForeground(true);
         
-        // 清除静态实例
+        // xóa instance static
         instance = null;
         
-        // 移除Shizuku监听器
+        // gỡ Shizuku listener
         try {
             Shizuku.removeBinderReceivedListener(binderReceivedListener);
             Shizuku.removeBinderDeadListener(binderDeadListener);
@@ -500,24 +500,24 @@ public class ChargingService extends Service {
             Log.e(TAG, "Error unregistering battery receiver", e);
         }
         
-        // V3.5: 注销设置变化接收器
+        // V3.5: hủy đăng ký receiver thay đổi cài đặt
         try {
             unregisterReceiver(settingsReceiver);
         } catch (Exception e) {
             Log.e(TAG, "Error unregistering settings receiver", e);
         }
         
-        // V3.5: 注销恢复充电动画接收器
+        // V3.5: hủy đăng ký receiver khôi phục hoạt ảnh sạc
         try {
             unregisterReceiver(resumeChargingReceiver);
         } catch (Exception e) {
             Log.e(TAG, "Error unregistering resume charging receiver", e);
         }
         
-        // V3.5: 停止唤醒循环
+        // V3.5: dừng vòng lặp đánh thức
         stopWakeupLoop();
         
-        // 解绑TaskService
+        // unbind TaskService
         try {
             if (taskService != null) {
                 Shizuku.unbindUserService(serviceArgs, taskServiceConnection, true);
@@ -533,7 +533,7 @@ public class ChargingService extends Service {
         return null;
     }
     
-    // V3.5: 启动唤醒和更新电量循环
+    // V3.5: khởi động vòng lặp đánh thức và cập nhật pin
     private void startWakeupAndUpdateLoop() {
         if (isWakeupRunning) {
             Log.w(TAG, "⚠️ Wakeup loop already running");
@@ -547,7 +547,7 @@ public class ChargingService extends Service {
             public void run() {
                 if (!isWakeupRunning) return;
                 
-                // 检查开关状态
+                // kiểm tra trạng thái công tắc
                 boolean enabled = prefs.getBoolean("charging_always_on_enabled", false);
                 if (!enabled) {
                     Log.d(TAG, "充电动画常亮已关闭，停止循环");
@@ -555,7 +555,7 @@ public class ChargingService extends Service {
                     return;
                 }
                 
-                // 发送wakeup命令
+                // gửi lệnh wakeup
                 try {
                     if (taskService != null) {
                         taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
@@ -567,27 +567,27 @@ public class ChargingService extends Service {
                     Log.w(TAG, "发送wakeup失败: " + t.getMessage());
                 }
                 
-                // 更新充电动画的电量显示
+                // cập nhật hiển thị pin hoạt ảnh sạc
                 try {
                     int batteryLevel = getBatteryLevel(getApplicationContext());
-                    // 直接调用静态方法更新电量
+                    // trực tiếpgọi phương thức static cập nhật pin
                     RearScreenChargingActivity.updateBatteryLevelStatic(batteryLevel);
                     Log.d(TAG, "🔋 电量已直接更新: " + batteryLevel + "%");
                 } catch (Exception e) {
                     Log.w(TAG, "更新电量失败: " + e.getMessage());
                 }
                 
-                // 100ms后继续
+                // sau 100ms tiếp tục
                 wakeupHandler.postDelayed(this, 100);
             }
         };
         
-        // 立即开始
+        // bắt đầu ngay
         wakeupHandler.post(wakeupRunnable);
         Log.d(TAG, "✓ Wakeup and update loop started");
     }
     
-    // V3.5: 停止唤醒循环
+    // V3.5: dừng vòng lặp đánh thức
     private void stopWakeupLoop() {
         isWakeupRunning = false;
         if (wakeupHandler != null && wakeupRunnable != null) {

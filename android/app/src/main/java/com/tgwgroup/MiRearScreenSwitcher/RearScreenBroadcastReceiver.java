@@ -2,7 +2,7 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -19,21 +19,21 @@ import android.content.Intent;
 import android.util.Log;
 
 /**
- * 监听小米背屏状态广播
- * 当背屏点亮/熄灭时，自动恢复常亮Activity，防止被系统Launcher覆盖
+ * lắng nghenhỏmàn hình sautrạng tháibroadcast
+ * tất nhiênmàn hình saubật sáng/tắtthời gian, tự độngkhôi phụcgiữ sángActivity, ngăn chặnbịhệ thốngLauncher
  */
 public class RearScreenBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = "RearScreenReceiver";
     
-    // 保存最后投射的应用信息
+    // lưucuối cùngứng dụngthông tin
     private static String lastMovedPackage = null;
     private static int lastTaskId = -1;
     private static boolean rearScreenActive = false;
     
     /**
-     * 保存最后投射的应用信息
-     * 由 TaskService 调用
-     */
+ * lưucuối cùngứng dụngthông tin
+ * TaskService gọi
+ */
     public static void saveLastTask(String packageName, int taskId) {
         lastMovedPackage = packageName;
         lastTaskId = taskId;
@@ -41,8 +41,8 @@ public class RearScreenBroadcastReceiver extends BroadcastReceiver {
     }
     
     /**
-     * 清除保存的任务信息
-     */
+ * xóalưuthông tin task
+ */
     public static void clearLastTask() {
         lastMovedPackage = null;
         lastTaskId = -1;
@@ -50,8 +50,8 @@ public class RearScreenBroadcastReceiver extends BroadcastReceiver {
     }
     
     /**
-     * 检查是否有活跃的背屏任务
-     */
+ * kiểm tracócósốngmàn hình sauvụ
+ */
     public static boolean hasActiveTask() {
         return rearScreenActive && lastMovedPackage != null;
     }
@@ -63,49 +63,49 @@ public class RearScreenBroadcastReceiver extends BroadcastReceiver {
         if (hasActiveTask()) {
         }
         if ("miui.intent.action.SUB_SCREEN_ON".equals(action)) {
-            // 背屏点亮时的处理
+            // màn hình saubật sángthời gianxử lý
             handleScreenOn(context);
         } else if ("miui.intent.action.SUB_SCREEN_OFF".equals(action)) {
-            // 背屏熄灭时的处理
+            // màn hình sautắtthời gianxử lý
             handleScreenOff(context);
         } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
-            // 系统屏幕关闭（可能是双击息屏）
+            // hệ thốngmàn hìnhđóng（có thểlàtắt màn hình）
             handleSystemScreenOff(context);
         } else if (Intent.ACTION_SCREEN_ON.equals(action)) {
-            // 系统屏幕打开
+            // hệ thốngmàn hìnhmở
             handleSystemScreenOn(context);
         }
     }
     
     /**
-     * 处理背屏点亮事件
-     * 尝试恢复之前的常亮Activity和投射的应用
-     */
+ * xử lýmàn hình saubật sángsự kiện
+ * thửkhôi phụctrước đógiữ sángActivityvàứng dụng
+ */
     private void handleScreenOn(Context context) {
         if (hasActiveTask()) {
-            // 移除Activity机制 - 完全依靠Service
-            // Activity的透明窗口会干扰锁屏时的触摸事件，导致滑动卡住
-            // 不需要发送恢复广播，Service会持续禁用Launcher
+            // gỡ bỏActivity - hoàn toànService
+            // Activitycửa sổ trong suốtsẽcan thiệp khóa màn hìnhthời giansự kiện cảm ứng, gâytrượtkhựng
+            // không cầngửikhôi phụcbroadcast, Servicesẽliên tụctắt Launcher
         } else {
         }
     }
     
     /**
-     * 处理背屏熄灭事件
-     */
+ * xử lýmàn hình sautắtsự kiện
+ */
     private void handleScreenOff(Context context) {
-        // 背屏熄灭时，保持任务信息，以便下次点亮时恢复
+        // màn hình sautắtthời gian, giữthông tin task, bằngdướilầnbật sángthời giankhôi phục
         if (hasActiveTask()) {
         } else {
         }
     }
     
     /**
-     * 处理系统屏幕关闭事件（双击息屏等）
-     */
+ * xử lýhệ thốngmàn hìnhđóngsự kiện（tắt màn hìnhchờ）
+ */
     private void handleSystemScreenOff(Context context) {
         if (hasActiveTask()) {
-            // 确保Service仍在运行
+            // đảm bảoServiceở
             if (!RearScreenKeeperService.isRunning()) {
                 Intent serviceIntent = new Intent(context, RearScreenKeeperService.class);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -119,11 +119,11 @@ public class RearScreenBroadcastReceiver extends BroadcastReceiver {
     }
     
     /**
-     * 处理系统屏幕打开事件
-     */
+ * xử lýhệ thốngmàn hìnhmởsự kiện
+ */
     private void handleSystemScreenOn(Context context) {
         if (hasActiveTask()) {
-            // 确保Service仍在运行
+            // đảm bảoServiceở
             if (!RearScreenKeeperService.isRunning()) {
                 Intent serviceIntent = new Intent(context, RearScreenKeeperService.class);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {

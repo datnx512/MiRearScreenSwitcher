@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -43,14 +43,14 @@ import androidx.core.app.NotificationCompat;
 import rikka.shizuku.Shizuku;
 
 /**
- * 前台Service - 保持背屏常亮
+ * foregroundService - giữmàn hình saugiữ sáng
  * 
- * 为什么用Service而不是Activity：
- * - Activity方案失败了3次（FLAG_NOT_FOCUSABLE、屏幕外、alpha=0都会被onStop）
- * - Service不会被onPause/onStop，系统很难杀死前台Service
- * - 可以直接持有WakeLock保持屏幕常亮
+ * làngười dùngServicemàkhônglàActivity：
+ * - Activitygiải phápthất bại3lần（FLAG_NOT_FOCUSABLE、màn hìnhngoài、alpha=0đềusẽbịonStop）
+ * - ServicekhôngsẽbịonPause/onStop, hệ thốngrấtkillforegroundService
+ * - có thểtrực tiếpcóWakeLockgiữmàn hìnhgiữ sáng
  * 
- * 注意：WakeLock可能会让两个屏幕都保持常亮（无法指定特定display）
+ * chú ý：WakeLockcó thểsẽchocáimàn hìnhđềugiữgiữ sáng（không cóphápchắc chắnchắc chắndisplay）
  */
 public class RearScreenKeeperService extends Service implements SensorEventListener {
     private static final String TAG = "RearScreenKeeperService";
@@ -62,36 +62,36 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     private Handler handler;
     private ITaskService taskService = null;
 
-    // V12.3: 初始杀进程策略 - 只杀1次，不持续监控
-    private static final int INITIAL_KILL_COUNT = 1; // 初始杀1次
-    private static final long KILL_INTERVAL_MS = 200; // 每次间隔200ms
+    // V12.3: khởi tạokill processchiến lược - chỉkill1lần, khôngliên tụcgiám sát
+    private static final int INITIAL_KILL_COUNT = 1; // khởi tạokill1lần
+    private static final long KILL_INTERVAL_MS = 200; // mỗi lầnkhoảng200ms
 
-    // V12.1: 接近传感器监听
+    // V12.1: cảm biến tiệm cậnlắng nghe
     private SensorManager sensorManager;
     private Sensor proximitySensor;
     private boolean isProximityCovered = false;
     private long lastProximityTime = 0;
-    private static final long PROXIMITY_DEBOUNCE_MS = 1500; // 防抖动：1500ms内连续覆盖才触发（降低灵敏度）
+    private static final long PROXIMITY_DEBOUNCE_MS = 1500; // chống rungđộng：1500mstrongkết nốitiếp tụcmớikích hoạt（thấp）
 
-    // V2.2: 接近传感器开关状态
-    private boolean proximitySensorEnabled = true; // 默认启用
+    // V2.2: tiệm cậncông tắc cảm biếntrạng thái
+    private boolean proximitySensorEnabled = true; // mặc địnhbật
 
-    // V14.5: 监听应用是否手动移回主屏
-    private static final long CHECK_TASK_INTERVAL_MS = 2000; // 每2秒检查一次
-    private String monitoredTaskInfo = null; // 格式: "packageName:taskId"
+    // V14.5: lắng ngheứng dụngcóthủ côngchuyểnquaymàn hình chính
+    private static final long CHECK_TASK_INTERVAL_MS = 2000; // 2giâykiểm tramột lần
+    private String monitoredTaskInfo = null; // thức: "packageName:taskId"
 
-    // V2.3: 临时暂停监控（充电动画显示期间）
+    // V2.3: tạm thờitạm dừng giám sát（hoạt ảnh sạchiển thịtrong thời gian）
     private boolean monitoringPaused = false;
 
-    // V2.4: 持续唤醒背屏（防止自动熄屏）
-    private static final long WAKEUP_INTERVAL_MS = 100; // 持续发送，每0.1秒唤醒一次（对熄屏几乎无感）
-    private boolean keepScreenOnEnabled = true; // 默认启用背屏常亮
+    // V2.4: liên tụcđánh thứcmàn hình sau（ngăn chặntự độngtắt màn hình）
+    private static final long WAKEUP_INTERVAL_MS = 100; // liên tục gửi, 0.1 giâyđánh thứcmột lần（đốitắt màn hìnhkhông cócảm）
+    private boolean keepScreenOnEnabled = true; // mặc địnhbậtmàn hình saugiữ sáng
 
     public static void pauseMonitoring() {
         if (instance != null) {
             instance.monitoringPaused = true;
 
-            // ✅ 取消所有pending的检查任务
+            // ✅ sởcópendingkiểm travụ
             if (instance.handler != null) {
                 instance.handler.removeCallbacks(instance.checkTaskRunnable);
                 Log.d(TAG, "⏸️ Monitoring paused, all checks cancelled");
@@ -106,7 +106,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             instance.monitoringPaused = false;
             Log.d(TAG, "▶️ Monitoring resumed");
 
-            // ✅ 延迟5秒后才开始检查，给投送app足够时间恢复到前台
+            // ✅ trễ5giâysaumớibắt đầukiểm tra, app castthời giankhôi phụcđếnforeground
             if (instance.handler != null) {
                 instance.handler.removeCallbacks(instance.checkTaskRunnable);
                 instance.handler.postDelayed(instance.checkTaskRunnable, 5000);
@@ -120,43 +120,43 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
         super.onCreate();
         instance = this;
 
-        // 创建通知渠道
+        // tạothông báođạo
         createNotificationChannel();
 
-        // 创建Handler用于定时任务
+        // tạoHandlerdùng chochắc chắnthời gianvụ
         handler = new Handler(Looper.getMainLooper());
 
-        // V2.2: 从SharedPreferences恢复传感器开关状态
+        // V2.2: từSharedPreferenceskhôi phụccông tắc cảm biếntrạng thái
         loadProximitySensorSetting();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        // V14.6: 处理点击通知返回主屏的事件
+        // V14.6: xử lýnhấpthông báotrả vềmàn hình chínhsự kiện
         if (intent != null && "ACTION_RETURN_TO_MAIN".equals(intent.getAction())) {
 
-            // 将监控的任务移回主屏
+            // sẽgiám sátvụchuyểnquaymàn hình chính
             if (monitoredTaskInfo != null && monitoredTaskInfo.contains(":") && taskService != null) {
                 try {
                     String[] parts = monitoredTaskInfo.split(":");
                     String packageName = parts[0];
                     int taskId = Integer.parseInt(parts[1]);
 
-                    // 获取应用名
+                    // lấy tên ứng dụng
                     String appName = getAppName(packageName);
 
                     taskService.moveTaskToDisplay(taskId, 0);
 
-                    // 先移除前台通知
+                    // trướcgỡ bỏthông báo foreground
                     stopForeground(Service.STOP_FOREGROUND_REMOVE);
 
-                    // 延迟显示Toast提示
+                    // hiển thị Toast trễgợi ý
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                         Toast.makeText(this, appName + " 已返回主屏", Toast.LENGTH_SHORT).show();
                     }, 100);
 
-                    // 停止服务
+                    // dừngdịch vụ
                     stopSelf();
                     return START_NOT_STICKY;
 
@@ -166,19 +166,19 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             }
         }
 
-        // V2.2: 处理接近传感器开关设置
+        // V2.2: xử lýtiệm cậncông tắc cảm biếncài đặt
         if (intent != null && "ACTION_SET_PROXIMITY_ENABLED".equals(intent.getAction())) {
             boolean enabled = intent.getBooleanExtra("enabled", true);
             proximitySensorEnabled = enabled;
 
             Log.d(TAG, "🔧 传感器开关状态已更新: " + enabled);
 
-            // 如果关闭了传感器，且当前正在监听，则注销监听
+            // nếuđóngcảm biến, vàhiện tạiđanglắng nghe, thìhủy đăng kýlắng nghe
             if (!enabled && sensorManager != null && proximitySensor != null) {
                 sensorManager.unregisterListener(this);
                 Log.d(TAG, "⏸️ 传感器监听器已注销");
             }
-            // 如果打开了传感器，且当前没有监听，则注册监听
+            // nếumởcảm biến, vàhiện tạikhôngcólắng nghe, thìđăng kýlắng nghe
             else if (enabled && sensorManager != null && proximitySensor != null) {
                 boolean registered = sensorManager.registerListener(this, proximitySensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
@@ -192,19 +192,19 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             return START_STICKY;
         }
 
-        // V2.5: 处理背屏常亮开关设置
+        // V2.5: xử lýmàn hình saucông tắc giữ sángcài đặt
         if (intent != null && "ACTION_SET_KEEP_SCREEN_ON_ENABLED".equals(intent.getAction())) {
             boolean enabled = intent.getBooleanExtra("enabled", true);
             keepScreenOnEnabled = enabled;
 
             Log.d(TAG, "🔆 背屏常亮开关已" + (enabled ? "开启" : "关闭"));
 
-            // 如果关闭了常亮，停止发送WAKEUP
+            // nếuđónggiữ sáng, dừnggửiWAKEUP
             if (!enabled && handler != null) {
                 handler.removeCallbacks(wakeupRearScreenRunnable);
                 Log.d(TAG, "⏸️ 背屏WAKEUP发送已停止");
             }
-            // 如果打开了常亮，启动发送WAKEUP
+            // nếumởgiữ sáng, khởi độnggửiWAKEUP
             else if (enabled && handler != null) {
                 handler.removeCallbacks(wakeupRearScreenRunnable);
                 startRearScreenWakeup();
@@ -214,7 +214,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
         }
 
         try {
-            // V14.7: 先从Intent获取要监控的任务信息
+            // V14.7: trướctừIntentlấycầngiám sátthông tin task
             if (intent != null) {
                 String newMonitoredTask = intent.getStringExtra("lastMovedTask");
                 if (newMonitoredTask != null) {
@@ -222,68 +222,68 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                 }
             }
 
-            // V2.5: 从Intent获取背屏常亮开关状态
+            // V2.5: từIntentlấymàn hình sautrạng thái công tắc giữ sáng
             if (intent != null) {
                 keepScreenOnEnabled = intent.getBooleanExtra("keepScreenOnEnabled", true);
                 Log.d(TAG, "🔆 背屏常亮开关状态: " + (keepScreenOnEnabled ? "开启" : "关闭"));
             }
 
-            // V15.1: 立即显示通知，不等待其他操作
+            // V15.1: ngayhiển thịthông báo, khôngchờkhácthao tác
             Notification notification = buildNotification();
             startForeground(NOTIFICATION_ID, notification);
 
-            // 在后台线程执行耗时操作，不阻塞通知显示
+            // ởbackgroundthreadthời gianthao tác, khôngthông báohiển thị
             new Thread(() -> {
-                // 绑定Shizuku TaskService
+                // bindShizuku TaskService
                 bindTaskService();
 
-                // 初始化接近传感器
+                // khởi tạocảm biến tiệm cận
                 initProximitySensor();
             }).start();
 
-            // 2. 获取WakeLock保持屏幕常亮
+            // 2. lấyWakeLockgiữmàn hìnhgiữ sáng
             if (wakeLock == null || !wakeLock.isHeld()) {
                 PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
 
-                // 使用SCREEN_BRIGHT_WAKE_LOCK保持屏幕亮起
-                // 注意：这会让屏幕保持亮起，但可能无法指定是哪个display
+                // sử dụngSCREEN_BRIGHT_WAKE_LOCKgiữmàn hìnhsáng
+                // chú ý：nàysẽchomàn hìnhgiữsáng, nhưngcó thểkhông cóphápchắc chắnlàcáidisplay
                 wakeLock = pm.newWakeLock(
-                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK, // 移除ACQUIRE_CAUSES_WAKEUP避免唤醒主屏
+                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK, // gỡ bỏACQUIRE_CAUSES_WAKEUPtránhđánh thứcmàn hình chính
                         "MRSS::RearScreenKeeper");
 
-                // 持续持有WakeLock（不设置超时）
+                // liên tụccóWakeLock（khôngcài đặttimeout）
                 wakeLock.acquire();
 
             } else {
             }
 
-            // 3. V12.2: 初始杀进程（只杀几次，不持续监控）
+            // 3. V12.2: khởi tạokill process（chỉkilllần, khôngliên tụcgiám sát）
             performInitialKills();
 
-            // 4. V14.5: 启动定期检查任务
+            // 4. V14.5: khởi độngchắc chắnkỳkiểm travụ
             if (monitoredTaskInfo != null) {
                 startTaskMonitoring();
             }
 
-            // 5. V2.5: 启动持续唤醒背屏（每0.5秒，根据开关状态）
+            // 5. V2.5: khởi độngliên tụcđánh thứcmàn hình sau（0.5giây, theotrạng thái công tắc）
             startRearScreenWakeup();
 
         } catch (Exception e) {
             Log.e(TAG, "✗ Error starting service", e);
         }
 
-        // START_STICKY: 如果被系统杀死，会自动重启
+        // START_STICKY: nếubịhệ thốngkill, sẽtự độngkhởi động lại
         return START_STICKY;
     }
 
     /**
-     * V15.2: 启动任务监听 - 检测应用是否在前台
-     * 监控被投放到背屏的应用，如果不在前台了（被关闭或切换），自动停止服务并清除通知
-     */
+ * V15.2: khởi độngvụlắng nghe - kiểmđoứng dụngcóởforeground
+ * giám sátbịcastđếnmàn hình sauứng dụng, nếukhôngởforeground（bịđónghoặcchuyển）, tự độngdừngdịch vụvàxóathông báo
+ */
     private final Runnable checkTaskRunnable = new Runnable() {
         @Override
         public void run() {
-            // V2.3: 如果监控已暂停（充电动画显示中），跳过本次检查
+            // V2.3: nếugiám sátđãtạm dừng（hoạt ảnh sạchiển thịtrong）, bỏ quabảnlầnkiểm tra
             if (monitoringPaused) {
                 handler.postDelayed(this, CHECK_TASK_INTERVAL_MS);
                 return;
@@ -291,26 +291,26 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
 
             if (monitoredTaskInfo != null && taskService != null) {
                 try {
-                    // V15.2: 检查背屏(displayId=1)的前台应用是否还是我们监控的应用
+                    // V15.2: kiểm tra màn hình sau(displayId=1)ứng dụng foreground có còn ứng dụng chúng ta giám sát
                     String rearForegroundApp = taskService.getForegroundAppOnDisplay(1);
 
-                    // V2.3: 排除充电动画/通知动画（临时占用背屏，不应导致Service销毁）
+                    // V2.3: xếptrừhoạt ảnh sạc/thông báo hoạt ảnh（tạm thờichiếm dụngmàn hình sau, khôngứnggâyServicehủy）
                     if (rearForegroundApp != null && (rearForegroundApp.contains("RearScreenChargingActivity")
                             || rearForegroundApp.contains("RearScreenNotificationActivity"))) {
-                        // 充电动画正在显示，跳过本次检查
+                        // hoạt ảnh sạcđanghiển thị, bỏ quabảnlầnkiểm tra
                         handler.postDelayed(this, CHECK_TASK_INTERVAL_MS);
                         return;
                     }
 
-                    // 如果背屏前台应用不是我们监控的应用，说明它被关闭或切换了
+                    // nếu ứng dụng foreground màn hình sau không phải ứng dụng chúng ta giám sát, giải thíchnóbịđónghoặcchuyển
                     if (rearForegroundApp == null || !rearForegroundApp.equals(monitoredTaskInfo)) {
-                        // 应用不在背屏前台了（被关闭或切换），停止服务
+                        // ứng dụngkhôngởmàn hình sau foreground（bịđónghoặcchuyển）, dừngdịch vụ
                         stopForeground(Service.STOP_FOREGROUND_REMOVE);
                         stopSelf();
                         return;
                     }
 
-                    // 继续监听
+                    // tiếp tụclắng nghe
                     handler.postDelayed(this, CHECK_TASK_INTERVAL_MS);
 
                 } catch (Exception e) {
@@ -330,23 +330,23 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * V2.5: 持续唤醒背屏任务 - 每0.5秒发送WAKEUP，防止背屏自动熄屏
-     */
+ * V2.5: liên tụcđánh thứcmàn hình sauvụ - 0.5giâygửiWAKEUP, ngăn chặnmàn hình sautự độngtắt màn hình
+ */
     private final Runnable wakeupRearScreenRunnable = new Runnable() {
         @Override
         public void run() {
-            // 检查开关状态
+            // kiểm tra trạng thái công tắc
             if (keepScreenOnEnabled && taskService != null) {
                 try {
-                    // 向背屏(displayId=1)发送WAKEUP唤醒信号
+                    // vềmàn hình sau(displayId=1)gửiWAKEUPđánh thứcsố
                     taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
-                    // Log.d(TAG, "✨ 背屏保活唤醒已发送"); // 注释掉以减少日志
+                    // Log.d(TAG, "✨ màn hình saugiữ sốngđánh thứcđãgửi"); // chú thíchbằngítlog
                 } catch (Exception e) {
                     Log.w(TAG, "背屏唤醒失败: " + e.getMessage());
                 }
             }
 
-            // 持续发送，每0.5秒执行一次
+            // liên tục gửi, 0.5giâymột lần
             if (keepScreenOnEnabled) {
                 handler.postDelayed(this, WAKEUP_INTERVAL_MS);
             }
@@ -355,15 +355,15 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
 
     private void startRearScreenWakeup() {
         if (handler != null && keepScreenOnEnabled) {
-            // 立即执行第一次唤醒，然后开始持续发送
+            // ngaymột lầnđánh thức, sau đóbắt đầuliên tục gửi
             handler.post(wakeupRearScreenRunnable);
             Log.d(TAG, "⏰ 背屏持续唤醒已启动 (0.5秒间隔)");
         }
     }
 
     /**
-     * V12.3: 初始杀进程 - 只杀1次，不持续监控
-     */
+ * V12.3: khởi tạokill process - chỉkill1lần, khôngliên tụcgiám sát
+ */
     private void performInitialKills() {
 
         for (int i = 0; i < INITIAL_KILL_COUNT; i++) {
@@ -382,7 +382,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                         Log.w(TAG, "⚠ TaskService not available for kill #" + killNumber);
                     }
 
-                    // 最后一次杀完后的总结
+                    // lần cuốikillhoàn toànsaukết quả
                     if (killNumber == INITIAL_KILL_COUNT) {
                         handler.postDelayed(new Runnable() {
                             @Override
@@ -396,14 +396,14 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * Shizuku TaskService连接回调
-     */
+ * Shizuku TaskService kết nốiquaygọi
+ */
     private final ServiceConnection taskServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             taskService = ITaskService.Stub.asInterface(binder);
 
-            // 取消重连任务（如果存在）
+            // kết nối lạivụ（nếutồnở）
             if (handler != null) {
                 handler.removeCallbacks(reconnectTaskServiceRunnable);
             }
@@ -414,21 +414,21 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             Log.w(TAG, "⚠ TaskService disconnected - will attempt to reconnect");
             taskService = null;
 
-            // 启动重连任务
+            // khởi độngkết nối lạivụ
             scheduleReconnectTaskService();
         }
     };
 
     /**
-     * TaskService重连任务
-     */
+ * TaskServicekết nối lạivụ
+ */
     private final Runnable reconnectTaskServiceRunnable = new Runnable() {
         @Override
         public void run() {
             if (taskService == null) {
                 bindTaskService();
 
-                // 如果重连失败，1秒后再次尝试
+                // nếukết nối lại thất bại, sau 1 giâythử lại lần nữa
                 handler.postDelayed(this, 1000);
             } else {
             }
@@ -436,8 +436,8 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     };
 
     /**
-     * 安排TaskService重连
-     */
+ * xếpTaskServicekết nối lại
+ */
     private void scheduleReconnectTaskService() {
         if (handler != null) {
             handler.postDelayed(reconnectTaskServiceRunnable, 300);
@@ -445,8 +445,8 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     };
 
     /**
-     * 绑定Shizuku TaskService
-     */
+ * bindShizuku TaskService
+ */
     private void bindTaskService() {
         if (taskService != null) {
             return;
@@ -467,8 +467,8 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * 解绑TaskService
-     */
+ * unbind TaskService
+ */
     private void unbindTaskService() {
         if (taskService != null) {
             try {
@@ -495,40 +495,40 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
         Log.w(TAG, "═══════════════════════════════════════");
         Log.w(TAG, "⚠ Service onDestroy called");
 
-        // 立即移除前台通知
+        // ngaygỡ bỏthông báo foreground
         stopForeground(Service.STOP_FOREGROUND_REMOVE);
 
-        // 清理所有待执行的任务
+        // tronglýsởcóvụ
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
 
-        // V12.2: 恢复并主动唤醒Launcher
+        // V12.2: khôi phụcvàchủ độngđánh thứcLauncher
         if (taskService != null) {
             try {
 
-                // 1. 恢复Launcher（unsuspend）
+                // 1. khôi phụcLauncher（unsuspend）
                 taskService.enableSubScreenLauncher();
 
-                // 2. 短暂延迟，确保unsuspend生效
+                // 2. ngắntrễ, đảm bảounsuspend
                 Thread.sleep(300);
 
-                // 3. 主动启动Launcher的Activity来唤醒它
+                // 3. chủ độngkhởi độngLauncherActivityđánh thứcnó
 
             } catch (Exception e) {
                 Log.w(TAG, "Failed to restore launcher", e);
             }
         }
 
-        // 解绑TaskService
+        // unbind TaskService
         unbindTaskService();
 
-        // 释放WakeLock
+        // WakeLock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
 
-        // 注销接近传感器
+        // hủy đăng kýcảm biến tiệm cận
         unregisterProximitySensor();
 
         instance = null;
@@ -537,24 +537,24 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
 
     @Override
     public IBinder onBind(Intent intent) {
-        // 不支持绑定
+        // khôngbind
         return null;
     }
 
     /**
-     * 创建通知渠道（Android 8.0+必需）
-     */
+ * tạothông báođạo（Android 8.0+phảicần）
+ */
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     getString(R.string.notif_kernel_service),
-                    NotificationManager.IMPORTANCE_LOW // 低重要性，减少干扰
+                    NotificationManager.IMPORTANCE_LOW // thấpnặngcầntính, ítcan thiệp
             );
             channel.setDescription("com.xiaomi.subscreencenter.SubScreenLauncher真是高高在上呢");
-            channel.setShowBadge(false); // 不显示角标
-            channel.enableLights(false); // 不闪烁LED
-            channel.enableVibration(false); // 不振动
+            channel.setShowBadge(false); // không hiển thịđánh dấu
+            channel.enableLights(false); // khônglấp lánhLED
+            channel.enableVibration(false); // khôngrung
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
@@ -563,8 +563,8 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * 获取应用名称
-     */
+ * lấy tên ứng dụng
+ */
     private String getAppName(String packageName) {
         try {
             android.content.pm.PackageManager pm = getPackageManager();
@@ -576,14 +576,14 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
         } catch (Exception e) {
             Log.w(TAG, "Failed to get app name: " + e.getMessage());
         }
-        return packageName; // 失败时返回包名
+        return packageName; // thất bạithời giantrả vềtên package
     }
 
     /**
-     * V2.4: 创建通用的Service前台通知（供多个Service共用）
-     */
+ * V2.4: tạothông dụngServicethông báo foreground（chonhiềucáiServicecùng dùng）
+ */
     public static Notification createServiceNotification(Context context) {
-        // 创建通知渠道
+        // tạothông báođạo
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
@@ -608,10 +608,10 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * 构建前台通知
-     */
+ * thông báo foreground
+ */
     private Notification buildNotification() {
-        // 获取应用名称
+        // lấy tên ứng dụng
         String appName = "应用";
 
         if (monitoredTaskInfo != null && monitoredTaskInfo.contains(":")) {
@@ -621,7 +621,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             Log.w(TAG, "⚠ Invalid monitored task info: " + monitoredTaskInfo);
         }
 
-        // 点击通知切换回主屏
+        // nhấpthông báochuyểnquaymàn hình chính
         Intent returnIntent = new Intent(this, RearScreenKeeperService.class);
         returnIntent.setAction("ACTION_RETURN_TO_MAIN");
         PendingIntent pendingIntent = PendingIntent.getService(
@@ -633,23 +633,23 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                 .setContentText(getString(R.string.notif_click_to_return, appName))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_LOW) // 低优先级
-                .setOngoing(true) // 持续通知，不可滑动清除
-                .setShowWhen(false) // 不显示时间
+                .setPriority(NotificationCompat.PRIORITY_LOW) // thấpưutrước
+                .setOngoing(true) // liên tụcthông báo, khôngcó thểtrượtxóa
+                .setShowWhen(false) // không hiển thịthời gian
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
     }
 
     /**
-     * 检查Service是否正在运行
-     */
+ * kiểm traServicecóđang
+ */
     public static boolean isRunning() {
         return instance != null;
     }
 
     /**
-     * 停止Service
-     */
+ * dừngService
+ */
     public static void stop() {
         if (instance != null) {
             instance.stopSelf();
@@ -657,12 +657,12 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     // ========================================
-    // 接近传感器相关方法
+    // cảm biến tiệm cậntươngkeyphương thức
     // ========================================
 
     /**
-     * 从SharedPreferences加载传感器开关状态
-     */
+ * từSharedPreferencestảicông tắc cảm biếntrạng thái
+ */
     private void loadProximitySensorSetting() {
         try {
             SharedPreferences prefs = getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
@@ -670,23 +670,23 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
             Log.d(TAG, "🔧 传感器开关状态已恢复: " + proximitySensorEnabled);
         } catch (Exception e) {
             Log.e(TAG, "✗ 加载传感器设置失败", e);
-            proximitySensorEnabled = true; // 默认启用
+            proximitySensorEnabled = true; // mặc địnhbật
         }
     }
 
     /**
-     * 初始化接近传感器（背屏接近传感器）
-     */
+ * khởi tạocảm biến tiệm cận（màn hình saucảm biến tiệm cận）
+ */
     private void initProximitySensor() {
         try {
             sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
             if (sensorManager != null) {
-                // 获取所有传感器列表
+                // lấysởcócảm biến
                 List<Sensor> allSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-                // 查找背屏接近传感器（名称包含 "Back" 和 "Proximity"）
-                // 优先选择 Wakeup 版本，如果没有则选择 Non-wakeup 版本
+                // tramàn hình saucảm biến tiệm cận（têngói "Back" và "Proximity"）
+                // ưutrướcchọn Wakeup phiên bản, nếukhôngcóthìchọn Non-wakeup phiên bản
                 Sensor wakeupSensor = null;
                 Sensor nonWakeupSensor = null;
 
@@ -701,7 +701,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     }
                 }
 
-                // 优先使用 Wakeup 版本
+                // ưutrướcsử dụng Wakeup phiên bản
                 if (wakeupSensor != null) {
                     proximitySensor = wakeupSensor;
                 } else if (nonWakeupSensor != null) {
@@ -709,14 +709,14 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     Log.w(TAG, "→ Using NON-WAKEUP sensor (may not provide continuous data)");
                 }
 
-                // 如果找不到背屏传感器，回退到默认传感器
+                // nếukhôngđếnmàn hình saucảm biến, quaylùiđếnmặc địnhcảm biến
                 if (proximitySensor == null) {
                     Log.w(TAG, "⚠ Rear proximity sensor not found, using default");
                     proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
                 }
 
                 if (proximitySensor != null) {
-                    // V2.2: 只有在传感器开关启用时才注册监听器
+                    // V2.2: chỉ khicông tắc cảm biếnkhi bậtmớiđăng ký listener
                     if (proximitySensorEnabled) {
                         boolean registered = sensorManager.registerListener(
                                 this,
@@ -743,8 +743,8 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * 注销接近传感器
-     */
+ * hủy đăng kýcảm biến tiệm cận
+ */
     private void unregisterProximitySensor() {
         try {
             if (sensorManager != null) {
@@ -756,42 +756,42 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
     }
 
     /**
-     * 传感器数据变化回调
-     */
+ * cảm biếndữ liệuthay đổiquaygọi
+ */
     @Override
     public void onSensorChanged(SensorEvent event) {
-        // V2.2: 如果传感器已关闭，不处理事件
+        // V2.2: nếucảm biếnđãđóng, khôngxử lýsự kiện
         if (!proximitySensorEnabled) {
             return;
         }
 
-        // 检查是否是我们的背屏接近传感器
+        // kiểm tracólàtôicácmàn hình saucảm biến tiệm cận
         if (event.sensor == proximitySensor) {
             float distance = event.values[0];
             float maxRange = proximitySensor.getMaximumRange();
 
-            // 详细日志 - 每次传感器变化都记录
+            // log - mỗi lầncảm biếnthay đổiđềughi
 
-            // 当距离接近0（被覆盖）时触发
-            boolean isCovered = (distance < maxRange * 0.2f); // 小于最大距离的20%视为覆盖
+            // tất nhiêntiệm cận0（bị）thời giankích hoạt
+            boolean isCovered = (distance < maxRange * 0.2f); // nhỏởtối ưulớn20%là
 
             long currentTime = System.currentTimeMillis();
 
             if (isCovered && !isProximityCovered) {
-                // 从未覆盖到覆盖
+                // từchưađến
                 isProximityCovered = true;
                 lastProximityTime = currentTime;
 
                 Log.w(TAG, "👋 PROXIMITY COVERED! Distance: " + distance + " cm");
                 Log.w(TAG, "👋 Starting debounce timer (" + PROXIMITY_DEBOUNCE_MS + "ms)...");
 
-                // 防抖动：延迟检查
+                // chống rungđộng：trễkiểm tra
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (isProximityCovered &&
                                 (System.currentTimeMillis() - lastProximityTime >= PROXIMITY_DEBOUNCE_MS)) {
-                            // 确认覆盖超过500ms，触发拉回主屏
+                            // chắc chắnnhậnsiêuquá trình500ms, kích hoạtquaymàn hình chính
                             Log.w(TAG, "👋 Debounce timer expired - triggering return to main display!");
                             handleProximityCovered();
                         } else {
@@ -800,29 +800,29 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                 }, PROXIMITY_DEBOUNCE_MS);
 
             } else if (!isCovered && isProximityCovered) {
-                // 从覆盖到未覆盖
+                // từđếnchưa
                 isProximityCovered = false;
             } else if (isCovered && isProximityCovered) {
-                // 持续覆盖中
+                // liên tụctrong
             } else {
-                // 持续未覆盖
+                // liên tụcchưa
             }
         } else {
-            // 其他传感器的数据，也记录一下
+            // kháccảm biếndữ liệu, cũngghimộtdưới
         }
     }
 
     /**
-     * 传感器精度变化回调（不需要处理）
-     */
+ * cảm biếnthay đổiquaygọi（không cầnxử lý）
+ */
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // 不需要处理
+        // không cầnxử lý
     }
 
     /**
-     * 处理接近传感器覆盖事件 - 拉回主屏并停止Service
-     */
+ * xử lýcảm biến tiệm cậnsự kiện - quaymàn hình chínhvàdừngService
+ */
     private void handleProximityCovered() {
         Log.w(TAG, "═══════════════════════════════════════");
         Log.w(TAG, "🤚 PROXIMITY TRIGGER - Return to main display");
@@ -830,7 +830,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
 
         try {
             if (taskService != null) {
-                // 获取最后移动的任务信息
+                // lấycuối cùngchuyểnthông tin task
                 String lastTask = SwitchToRearTileService.getLastMovedTask();
 
                 if (lastTask != null && lastTask.contains(":")) {
@@ -838,14 +838,14 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     String packageName = parts[0];
                     int taskId = Integer.parseInt(parts[1]);
 
-                    // 获取应用名
+                    // lấy tên ứng dụng
                     String appName = getAppName(packageName);
 
-                    // 拉回主屏
+                    // quaymàn hình chính
                     boolean success = taskService.moveTaskToDisplay(taskId, 0);
 
                     if (success) {
-                        // 延迟显示Toast
+                        // hiển thị Toast trễ
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                             Toast.makeText(RearScreenKeeperService.this, appName + " 已返回主屏", Toast.LENGTH_SHORT).show();
                         }, 100);
@@ -856,10 +856,10 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     Log.w(TAG, "⚠ No active rear screen task found");
                 }
 
-                // 先移除前台通知
+                // trướcgỡ bỏthông báo foreground
                 stopForeground(Service.STOP_FOREGROUND_REMOVE);
 
-                // 停止Service（会自动恢复系统Launcher）
+                // dừngService（sẽtự độngkhôi phụchệ thốngLauncher）
                 stopSelf();
 
             } else {

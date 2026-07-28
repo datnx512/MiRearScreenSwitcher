@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  *
  * Co-developed with AI assistants:
  * - Cursor
@@ -42,49 +42,49 @@ import java.util.Set;
 import rikka.shizuku.Shizuku;
 
 /**
- * 通知监听服务
- * 监听系统通知，将选中应用的通知显示到背屏
+ * thông báodịch vụ lắng nghe
+ * lắng nghehệ thốngthông báo, sẽchọntrongứng dụngthông báohiển thịđếnmàn hình sau
  */
 public class NotificationService extends NotificationListenerService {
     private static final String TAG = "NotificationService";
-    private static final int NOTIFICATION_ID = 1001; // 与其他Service共用ID
+    private static final int NOTIFICATION_ID = 1001; // và Service khác cùng dùng ID
     
     private Set<String> selectedApps = new HashSet<>();
-    private boolean privacyHideTitle = false; // V3.2: 隐私模式 - 隐藏标题
-    private boolean privacyHideContent = false; // V3.2: 隐私模式 - 隐藏内容
-    private boolean followDndMode = true; // 跟随系统勿扰模式（默认开启）
-    private boolean onlyWhenLocked = false; // 仅倒扣手机时通知（默认关闭）
-    private boolean notificationDarkMode = false; // 通知暗夜模式（默认关闭）
-    private boolean serviceEnabled = false; // 服务是否启用
-    private ITaskService taskService; // 自己的TaskService实例
+    private boolean privacyHideTitle = false; // V3.2: ẩnchế độ - ẩntiêu đề
+    private boolean privacyHideContent = false; // V3.2: ẩnchế độ - ẩntrongchứa
+    private boolean followDndMode = true; // theohệ thốngKhông làm phiềnchế độ（mặc địnhbật）
+    private boolean onlyWhenLocked = false; // úp màn hìnhtaythời gianthông báo（mặc địnhđóng）
+    private boolean notificationDarkMode = false; // thông báochế độ tối（mặc địnhđóng）
+    private boolean serviceEnabled = false; // dịch vụcóbật
+    private ITaskService taskService; // tựTaskServiceinstance
     private SharedPreferences prefs;
     private PowerManager.WakeLock wakeLock;
     
-    // 主屏接近传感器相关
+    // màn hình chínhcảm biến tiệm cậntươngkey
     private SensorManager sensorManager;
-    private Sensor mainProximitySensor; // 主屏接近传感器
-    private boolean isMainScreenCovered = false; // 主屏是否被遮盖
+    private Sensor mainProximitySensor; // màn hình chínhcảm biến tiệm cận
+    private boolean isMainScreenCovered = false; // màn hình chínhcóbị
     
-    // 静态实例，供外部访问
+    // instance static, chongoàibộ phậntruy cập
     private static NotificationService instance;
     
     public static ITaskService getTaskService() {
         return instance != null ? instance.taskService : null;
     }
     
-    // 广播接收器：监听设置重新加载
+    // broadcast receiver：lắng nghecài đặttải lại
     private BroadcastReceiver settingsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if ("com.tgwgroup.MiRearScreenSwitcher.RELOAD_NOTIFICATION_SETTINGS".equals(intent.getAction())) {
                 Log.d(TAG, "🔄 收到重新加载设置的广播");
-                loadNotificationServiceSettings(); // 重新加载开关状态
-                loadSettings(); // 重新加载其他设置
+                loadNotificationServiceSettings(); // tải lại trạng thái công tắc
+                loadSettings(); // tải lạikháccài đặt
             }
         }
     };
     
-    // Shizuku服务配置
+    // Shizukudịch vụcấu hình
     private final Shizuku.UserServiceArgs serviceArgs = 
         new Shizuku.UserServiceArgs(new ComponentName("com.tgwgroup.MiRearScreenSwitcher", TaskService.class.getName()))
             .daemon(false)
@@ -92,14 +92,14 @@ public class NotificationService extends NotificationListenerService {
             .debuggable(false)
             .version(1);
     
-    // TaskService连接
+    // TaskService kết nối
     private final ServiceConnection taskServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             Log.d(TAG, "✓ TaskService connected");
             taskService = ITaskService.Stub.asInterface(binder);
             
-            // 初始化显示屏信息缓存
+            // khởi tạocache thông tin màn hình
             try {
                 DisplayInfoCache.getInstance().initialize(taskService);
             } catch (Exception e) {
@@ -111,7 +111,7 @@ public class NotificationService extends NotificationListenerService {
         public void onServiceDisconnected(ComponentName name) {
             Log.d(TAG, "✗ TaskService disconnected");
             taskService = null;
-            // 自动重连
+            // tự động kết nối lại
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 if (taskService == null) {
                     bindTaskService();
@@ -120,7 +120,7 @@ public class NotificationService extends NotificationListenerService {
         }
     };
     
-    // Shizuku监听器
+    // Shizuku listener
     private final Shizuku.OnBinderReceivedListener binderReceivedListener = 
         () -> {
             Log.d(TAG, "Shizuku binder received");
@@ -131,7 +131,7 @@ public class NotificationService extends NotificationListenerService {
         () -> {
             Log.d(TAG, "Shizuku binder dead");
             taskService = null;
-            // 尝试重连
+            // thử kết nối lại
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 bindTaskService();
             }, 1000);
@@ -142,13 +142,13 @@ public class NotificationService extends NotificationListenerService {
         super.onCreate();
         Log.d(TAG, "🟢 NotificationService created");
         
-        // 保存实例
+        // lưu instance
         instance = this;
         
-        // 初始化SharedPreferences
+        // khởi tạoSharedPreferences
         prefs = getSharedPreferences("mrss_settings", Context.MODE_PRIVATE);
         
-        // 注册广播接收器（监听设置变化）
+        // đăng kýbroadcast receiver（lắng nghethay đổi cài đặt）
         IntentFilter filter = new IntentFilter("com.tgwgroup.MiRearScreenSwitcher.RELOAD_NOTIFICATION_SETTINGS");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(settingsReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
@@ -157,22 +157,22 @@ public class NotificationService extends NotificationListenerService {
         }
         Log.d(TAG, "✓ 广播接收器已注册");
         
-        // 添加Shizuku监听器
+        // thêm Shizuku listener
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener);
         Shizuku.addBinderDeadListener(binderDeadListener);
         
-        // 绑定TaskService
+        // bind TaskService
         bindTaskService();
         
-        // V2.4: 加载通知服务开关状态
+        // V2.4: tảithông báodịch vụtrạng thái công tắc
         Log.d(TAG, "🔧 开始加载通知服务开关状态...");
         loadNotificationServiceSettings();
         Log.d(TAG, "🔧 通知服务开关状态加载完成: " + serviceEnabled);
         
-        // 初始化主屏接近传感器
+        // khởi tạomàn hình chínhcảm biến tiệm cận
         initMainProximitySensor();
         
-        // 启动为前台服务，防止被系统杀死
+        // khởi độnglàforeground service, ngăn chặnbịhệ thốngkill
         startForeground(NOTIFICATION_ID, RearScreenKeeperService.createServiceNotification(this));
         Log.d(TAG, "✓ 前台服务已启动");
         
@@ -199,20 +199,20 @@ public class NotificationService extends NotificationListenerService {
     }
     
     /**
-     * 加载通知服务开关状态
-     */
+ * tảithông báodịch vụtrạng thái công tắc
+ */
     private void loadNotificationServiceSettings() {
         try {
             Log.d(TAG, "🔧 开始读取FlutterSharedPreferences...");
-            // 从FlutterSharedPreferences读取开关状态
+            // từFlutterSharedPreferencestrạng thái công tắc
             SharedPreferences flutterPrefs = getSharedPreferences("FlutterSharedPreferences", MODE_PRIVATE);
             Log.d(TAG, "🔧 FlutterSharedPreferences读取成功");
             
             serviceEnabled = flutterPrefs.getBoolean("flutter.notification_service_enabled", false);
             Log.d(TAG, "🔧 通知服务开关状态已恢复: " + serviceEnabled);
             
-            // NotificationListenerService由系统管理，不能手动停止
-            // 如果开关关闭，服务仍会运行但不处理通知
+            // NotificationListenerServicehệ thốngquản lý, khôngcó thểthủ côngdừng
+            // nếucông tắcđóng, dịch vụsẽnhưngkhôngxử lýthông báo
             if (!serviceEnabled) {
                 Log.d(TAG, "⏸️ 通知服务已禁用，将忽略所有通知");
             } else {
@@ -220,7 +220,7 @@ public class NotificationService extends NotificationListenerService {
             }
         } catch (Exception e) {
             Log.e(TAG, "✗ 加载通知服务设置失败", e);
-            serviceEnabled = false; // 默认关闭
+            serviceEnabled = false; // mặc địnhđóng
         }
     }
     
@@ -232,7 +232,7 @@ public class NotificationService extends NotificationListenerService {
             followDndMode = prefs.getBoolean("notification_follow_dnd_mode", true);
             onlyWhenLocked = prefs.getBoolean("notification_only_when_locked", false);
             notificationDarkMode = prefs.getBoolean("notification_dark_mode", false);
-            // 注意：不在这里重新设置 serviceEnabled，保持 loadNotificationServiceSettings() 的值
+            // chú ý：khôngởnàylàm lạicài đặt serviceEnabled, giữ loadNotificationServiceSettings() giá trị
             
             Log.d(TAG, "⚙️ 已加载设置");
             Log.d(TAG, "   - 启用状态: " + serviceEnabled + " (由loadNotificationServiceSettings设置)");
@@ -248,7 +248,7 @@ public class NotificationService extends NotificationListenerService {
         } catch (Exception e) {
             Log.e(TAG, "加载设置失败", e);
             selectedApps = new HashSet<>();
-            // 不在这里重置 serviceEnabled
+            // khôngởnàyreset serviceEnabled
         }
     }
     
@@ -256,10 +256,10 @@ public class NotificationService extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification sbn) {
         super.onNotificationPosted(sbn);
         
-        // V2.4: 每次收到通知时重新加载开关状态
+        // V2.4: mỗi lần nhận thông báotải lại trạng thái công tắc
         loadNotificationServiceSettings();
         
-        // V2.4: 如果通知服务开关关闭，不处理通知
+        // V2.4: nếuthông báodịch vụcông tắcđóng, khôngxử lýthông báo
         if (!serviceEnabled) {
             Log.d(TAG, "⏸️ 通知服务已禁用，忽略通知");
             return;
@@ -271,28 +271,28 @@ public class NotificationService extends NotificationListenerService {
             
             Log.d(TAG, "📢 收到通知: " + packageName);
             
-            // 忽略常驻通知
+            // thườngthông báo
             if ((notification.flags & Notification.FLAG_ONGOING_EVENT) != 0) {
                 Log.d(TAG, "⏭️ 忽略常驻通知: " + packageName);
                 return;
             }
             
-            // 忽略自己的通知
+            // tựthông báo
             if (packageName.equals(getPackageName())) {
                 Log.d(TAG, "⏭️ 忽略自己的通知");
                 return;
             }
             
-            // 每次都重新加载设置（确保实时生效）
+            // mỗi lầnđềutải lạicài đặt（đảm bảothựcthời gian）
             loadSettings();
             
-            // 检查服务是否启用
+            // kiểm tradịch vụcóbật
             if (!serviceEnabled) {
                 Log.d(TAG, "⏭️ 通知服务未启用，跳过");
                 return;
             }
             
-            // 检查系统勿扰模式
+            // kiểm trahệ thốngKhông làm phiềnchế độ
             if (followDndMode) {
                 try {
                     android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -305,7 +305,7 @@ public class NotificationService extends NotificationListenerService {
                 }
             }
             
-            // 检查是否仅倒扣手机时通知（检测主屏接近传感器）
+            // kiểm tracóúp màn hìnhtaythời gianthông báo（kiểmđomàn hình chínhcảm biến tiệm cận）
             if (onlyWhenLocked) {
                 if (!isMainScreenCovered) {
                     Log.d(TAG, "⏭️ 主屏未被遮盖，仅倒扣手机通知模式已开启，跳过");
@@ -316,7 +316,7 @@ public class NotificationService extends NotificationListenerService {
             Log.d(TAG, "📋 当前选中应用数量: " + selectedApps.size());
             Log.d(TAG, "📋 选中应用列表: " + selectedApps.toString());
             
-            // 检查是否在选中列表中
+            // kiểm tracóởchọntrongtrong
             if (!selectedApps.contains(packageName)) {
                 Log.d(TAG, "⏭️ 应用不在选中列表中: " + packageName);
                 return;
@@ -324,7 +324,7 @@ public class NotificationService extends NotificationListenerService {
             
             Log.d(TAG, "✓ 应用在选中列表中: " + packageName);
             
-            // 提取通知内容
+            // nângthông báotrongchứa
             String title = notification.extras.getString(Notification.EXTRA_TITLE, "");
             String text = notification.extras.getString(Notification.EXTRA_TEXT, "");
             long when = notification.when;
@@ -332,7 +332,7 @@ public class NotificationService extends NotificationListenerService {
             Log.d(TAG, "📝 通知标题: " + title);
             Log.d(TAG, "📝 通知内容: " + text);
             
-            // V3.2: 隐私模式处理（区分标题和内容）
+            // V3.2: ẩnchế độxử lý（phân vùngphântiêu đềvàtrongchứa）
             if (privacyHideTitle) {
                 Log.d(TAG, "🔒 隐藏通知标题");
                 title = getString(R.string.privacy_mode_enabled);
@@ -344,14 +344,14 @@ public class NotificationService extends NotificationListenerService {
             
             Log.d(TAG, "🚀 开始显示背屏通知: " + packageName);
             
-            // 通知动画管理器：开始通知动画（返回被打断的旧动画）
+            // thông báo animation manager: bắt đầuthông báo hoạt ảnh（trả vềhoạt ảnh cũ bị ngắt）
             RearAnimationManager.AnimationType oldAnim = RearAnimationManager.startAnimation(RearAnimationManager.AnimationType.NOTIFICATION);
             
-            // 如果有旧动画需要打断，发送打断广播
+            // nếu có hoạt ảnh cũ cần ngắt, gửi broadcast ngắt
             if (oldAnim == RearAnimationManager.AnimationType.CHARGING) {
                 Log.d(TAG, "🔄 检测到充电动画正在播放，发送打断广播");
                 
-                // V3.5: 检查充电动画是否是常亮模式
+                // V3.5: kiểm trahoạt ảnh sạccólàchế độ giữ sáng
                 boolean chargingAlwaysOn = prefs.getBoolean("charging_always_on_enabled", false);
                 RearAnimationManager.markInterruptedChargingAsAlwaysOn(chargingAlwaysOn);
                 
@@ -360,7 +360,7 @@ public class NotificationService extends NotificationListenerService {
                 Log.d(TAG, "🔄 检测到通知动画正在播放，发送打断广播并重载");
                 RearAnimationManager.sendInterruptBroadcast(this, RearAnimationManager.AnimationType.NOTIFICATION);
                 
-                // 延迟600ms后重新启动通知动画，确保旧动画完全停止（锁屏+投送app下需要更多时间）
+                // trễ600mssaukhởi động lạithông báo hoạt ảnh, đảm bảohoạt ảnh cũhoàn toàndừng（khóa màn hình+app castdướicầnhơnnhiềuthời gian）
                 final String finalPackageName = packageName;
                 final String finalTitle = title;
                 final String finalText = text;
@@ -369,10 +369,10 @@ public class NotificationService extends NotificationListenerService {
                     Log.d(TAG, "🔄 重载通知动画");
                     showNotificationOnRearScreen(finalPackageName, finalTitle, finalText, finalWhen);
                 }, 600);
-                return; // 提前返回，避免重复启动
+                return; // nângtrướctrả về, tránh lặp lạikhởi động
             }
             
-            // 触发背屏通知显示
+            // kích hoạtmàn hình sauthông báohiển thị
             showNotificationOnRearScreen(packageName, title, text, when);
             
         } catch (Exception e) {
@@ -381,12 +381,12 @@ public class NotificationService extends NotificationListenerService {
     }
     
     private void showNotificationOnRearScreen(String packageName, String title, String text, long when) {
-        // 参考ChargingService的重试机制
+        // thamChargingServicethử lại
         if (taskService == null) {
             Log.w(TAG, "⚠️ TaskService未连接，尝试重新绑定...");
             bindTaskService();
             
-            // 延迟500ms后重试
+            // trễ500mssauthử lại
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 showNotificationOnRearScreenDirect(packageName, title, text, when);
             }, 500);
@@ -402,15 +402,15 @@ public class NotificationService extends NotificationListenerService {
                 return;
             }
             
-            // 短时局部保活，避免在锁屏/重负载下被挂起
+            // ngắnthời giancụcbộ phậngiữ sống, tránhởkhóa màn hình/nặngtảidướibị
             acquireWakeLock(6000);
             Log.d(TAG, "🎯 准备启动Activity显示通知");
             
-            // 锁屏状态检查
+            // trạng thái khóa màn hìnhkiểm tra
             android.app.KeyguardManager km = (android.app.KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
             boolean isLocked = km != null && km.isKeyguardLocked();
             
-            // 读取主屏前台应用（用于同包名前台场景的保护）
+            // màn hình chính foregroundứng dụng（dùng chocùngtên packageforegroundgiữ）
             String mainForegroundApp = null;
             try {
                 mainForegroundApp = taskService.getForegroundAppOnDisplay(0);
@@ -419,32 +419,32 @@ public class NotificationService extends NotificationListenerService {
                 Log.w(TAG, "获取主屏前台应用失败: " + t.getMessage());
             }
             
-            // V3.3: 移除唤醒代码，避免锁屏时跳转到密码界面
+            // V3.3: gỡ bỏđánh thứccode, tránh khi khóa màn hình chuyển đến giao diện mật khẩu
             
             try {
-                // 暂停监控，防止被误杀
+                // tạm dừng giám sát, ngăn chặnbịsaikill
                 RearScreenKeeperService.pauseMonitoring();
             } catch (Throwable t) {
                 Log.w(TAG, "pauseMonitoring failed: " + t.getMessage());
             }
             
             try {
-                // 禁用背屏官方Launcher，避免抢占
+                // tắtLauncher màn hình sau chính thức, tránh
                 taskService.disableSubScreenLauncher();
             } catch (Throwable t) {
                 Log.w(TAG, "disableSubScreenLauncher failed: " + t.getMessage());
             }
             
-            // V3.3: 移除 wm dismiss-keyguard 命令，避免锁屏时跳转到密码界面
+            // V3.3: gỡ bỏ wm dismiss-keyguard lệnh, tránh khi khóa màn hình chuyển đến giao diện mật khẩu
             
-            // 2) 根据锁屏状态与前台应用选择启动策略
+            // 2) theo trạng thái khóa màn hình và ứng dụng foreground chọn chiến lược khởi động
             String componentName = getPackageName() + "/" + RearScreenNotificationActivity.class.getName();
             
-            // 当锁屏且主屏前台就是本条通知所属应用时，避免主屏占位策略，改为直接背屏启动，防止系统冲突
-            // 精确匹配包名，避免误判（如 com.tencent.mm 和 com.tencent.mobileqq）
+            // khi khóa màn hình và màn hình chính foreground là ứng dụng thuộc thông báo này, tránhmàn hình chính chiếm chỗchiến lược, sửalàtrực tiếpmàn hình saukhởi động, ngăn chặnhệ thống
+            // chắc chắnphân phốitên package, tránhsaixét（như com.tencent.mm và com.tencent.mobileqq）
             boolean forceDirectRearDueToSameApp = false;
             if (isLocked && mainForegroundApp != null && !mainForegroundApp.isEmpty()) {
-                // 提取主屏前台应用的包名（格式可能是 "com.example.app/com.example.app.MainActivity"）
+                // nângmàn hình chính foregroundứng dụngtên package（thứccó thểlà "com.example.app/com.example.app.MainActivity"）
                 String foregroundPackage = mainForegroundApp;
                 if (mainForegroundApp.contains("/")) {
                     foregroundPackage = mainForegroundApp.split("/")[0];
@@ -454,10 +454,10 @@ public class NotificationService extends NotificationListenerService {
                     foregroundPackage, packageName, forceDirectRearDueToSameApp ? "匹配(直接背屏)" : "不匹配(占位策略)"));
             }
             
-            // ✅ 统一策略：无论锁屏与否，都直接在背屏启动（避免DPI不匹配问题）
-            // 直接在背屏启动可以确保布局使用正确的DPI（450），避免从主屏移动导致的尺寸问题
+            // ✅ thống nhấtchiến lược：không cókhóa màn hìnhvớikhông, đềukhởi động trực tiếp trên màn hình sau（tránhDPIkhôngphân phối）
+            // khởi động trực tiếp trên màn hình saucó thể đảm bảo bố cục sử dụng đúngDPI（450）, tránhtừmàn hình chínhchuyểngây
             
-            // 确保暗夜模式设置是最新的
+            // đảm bảochế độ tốicài đặtlàtối ưumới
             notificationDarkMode = prefs.getBoolean("notification_dark_mode", false);
             Log.d(TAG, "🌙 当前暗夜模式设置: " + notificationDarkMode);
             
@@ -472,7 +472,7 @@ public class NotificationService extends NotificationListenerService {
             );
             
             boolean started = false;
-            // 尝试3次直接启动，确保成功
+            // thử3lầnkhởi động trực tiếp, đảm bảothành công
             for (int retry = 0; retry < 3; retry++) {
                 try {
                     taskService.executeShellCommand(directCmd);
@@ -480,7 +480,7 @@ public class NotificationService extends NotificationListenerService {
                         isLocked ? "锁屏状态" : "非锁屏状态", retry + 1));
                     try { Thread.sleep(150); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                     
-                    // 检查是否启动成功
+                    // kiểm tracókhởi độngthành công
                     String check = taskService.executeShellCommandWithResult("am stack list | grep RearScreenNotificationActivity");
                     if (check != null && !check.trim().isEmpty()) {
                         started = true;
@@ -492,11 +492,11 @@ public class NotificationService extends NotificationListenerService {
                 }
             }
             
-            // 如果直接启动失败，使用备用策略（主屏占位+移动）
+            // nếukhởi động trực tiếpthất bại, sử dụngbịngười dùngchiến lược（màn hình chính chiếm chỗ+chuyển）
             if (!started && isLocked) {
                 Log.w(TAG, "⚠️ 直接背屏启动失败，回退到主屏占位+移动策略");
                 
-                // 主屏启动（Activity 自行占位）
+                // màn hình chính khởi động（Activity tựchiếm chỗ）
                 String startOnMainCmd = String.format(
                     "am start -n %s --es packageName \"%s\" --es title \"%s\" --es text \"%s\" --el when %d --ez darkMode %b",
                     componentName,
@@ -510,7 +510,7 @@ public class NotificationService extends NotificationListenerService {
                 taskService.executeShellCommand(startOnMainCmd);
                 try { Thread.sleep(50); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                 
-                // 轮询获取taskId
+                // poll lấy taskId
                 String notifTaskId = null;
                 int attempts = 0;
                 int maxAttempts = 60;
@@ -530,13 +530,13 @@ public class NotificationService extends NotificationListenerService {
                 }
                 
                 if (notifTaskId != null) {
-                    // 4) 移动到背屏
+                    // 4) chuyển đến màn hình sau
                     String moveCmd = "service call activity_task 50 i32 " + notifTaskId + " i32 1";
                     taskService.executeShellCommand(moveCmd);
                     try { Thread.sleep(60); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
                     
-                    // 5) 锁屏时关闭主屏，避免主屏抢焦点
-                    // 主屏休眠功能已移除
+                    // 5) khi khóa màn hìnhđóng màn hình chính, tránhmàn hình chínhtiêu điểm
+                    // chức năng màn hình chính ngủđã gỡ
                     Log.d(TAG, "🔒 锁屏状态，主屏已关闭");
                     
                     Log.d(TAG, "✓ 通知动画已移动到背屏");
@@ -596,25 +596,25 @@ public class NotificationService extends NotificationListenerService {
     }
     
     /**
-     * 初始化主屏接近传感器（用于检测倒扣手机）
-     */
+ * khởi tạomàn hình chínhcảm biến tiệm cận（dùng chokiểmđoúp màn hìnhtay）
+ */
     private void initMainProximitySensor() {
         try {
             sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             
             if (sensorManager != null) {
-                // 获取所有传感器列表
+                // lấysởcócảm biến
                 java.util.List<Sensor> allSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
                 
-                // 查找主屏接近传感器（不包含"Back"的接近传感器）
-                // 优先选择 Wakeup 版本，如果没有则选择 Non-wakeup 版本
+                // tramàn hình chínhcảm biến tiệm cận（khônggói"Back"cảm biến tiệm cận）
+                // ưutrướcchọn Wakeup phiên bản, nếukhôngcóthìchọn Non-wakeup phiên bản
                 Sensor wakeupSensor = null;
                 Sensor nonWakeupSensor = null;
                 
                 for (Sensor sensor : allSensors) {
                     String name = sensor.getName();
                     if (name.contains("Proximity") && !name.contains("Back")) {
-                        // 主屏接近传感器（不包含Back）
+                        // màn hình chínhcảm biến tiệm cận（khônggóiBack）
                         if (name.contains("Wakeup")) {
                             wakeupSensor = sensor;
                         } else {
@@ -623,7 +623,7 @@ public class NotificationService extends NotificationListenerService {
                     }
                 }
                 
-                // 优先使用 Wakeup 版本
+                // ưutrướcsử dụng Wakeup phiên bản
                 if (wakeupSensor != null) {
                     mainProximitySensor = wakeupSensor;
                 } else if (nonWakeupSensor != null) {
@@ -631,14 +631,14 @@ public class NotificationService extends NotificationListenerService {
                     Log.w(TAG, "→ Using NON-WAKEUP main proximity sensor");
                 }
                 
-                // 如果找不到主屏传感器，回退到默认传感器
+                // nếukhôngđếnmàn hình chínhcảm biến, quaylùiđếnmặc địnhcảm biến
                 if (mainProximitySensor == null) {
                     Log.w(TAG, "⚠ Main proximity sensor not found, using default");
                     mainProximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
                 }
                 
                 if (mainProximitySensor != null) {
-                    // 注册传感器监听器
+                    // đăng kýcảm biếnlistener
                     boolean registered = sensorManager.registerListener(
                             proximitySensorListener,
                             mainProximitySensor,
@@ -661,8 +661,8 @@ public class NotificationService extends NotificationListenerService {
     }
     
     /**
-     * 注销主屏接近传感器
-     */
+ * hủy đăng kýmàn hình chínhcảm biến tiệm cận
+ */
     private void unregisterMainProximitySensor() {
         try {
             if (sensorManager != null && proximitySensorListener != null) {
@@ -675,8 +675,8 @@ public class NotificationService extends NotificationListenerService {
     }
     
     /**
-     * 主屏接近传感器监听器
-     */
+ * màn hình chínhcảm biến tiệm cậnlistener
+ */
     private final SensorEventListener proximitySensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
@@ -684,8 +684,8 @@ public class NotificationService extends NotificationListenerService {
                 float distance = event.values[0];
                 float maxRange = mainProximitySensor.getMaximumRange();
                 
-                // 当距离接近0（被覆盖）时触发
-                // 小于最大距离的20%视为覆盖
+                // tất nhiêntiệm cận0（bị）thời giankích hoạt
+                // nhỏởtối ưulớn20%là
                 boolean isCovered = (distance < maxRange * 0.2f);
                 
                 isMainScreenCovered = isCovered;
@@ -700,7 +700,7 @@ public class NotificationService extends NotificationListenerService {
         
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            // 不需要处理
+            // không cầnxử lý
         }
     };
     
@@ -717,7 +717,7 @@ public class NotificationService extends NotificationListenerService {
         super.onDestroy();
         Log.d(TAG, "🔴 NotificationService destroyed");
         
-        // 注销广播接收器
+        // hủy đăng kýbroadcast receiver
         try {
             unregisterReceiver(settingsReceiver);
             Log.d(TAG, "✓ 广播接收器已注销");
@@ -725,7 +725,7 @@ public class NotificationService extends NotificationListenerService {
             Log.w(TAG, "Failed to unregister receiver", e);
         }
         
-        // 移除Shizuku监听器
+        // gỡ Shizuku listener
         try {
             Shizuku.removeBinderReceivedListener(binderReceivedListener);
             Shizuku.removeBinderDeadListener(binderDeadListener);
@@ -733,7 +733,7 @@ public class NotificationService extends NotificationListenerService {
             Log.w(TAG, "Failed to remove Shizuku listeners", e);
         }
         
-        // 解绑TaskService
+        // unbind TaskService
         try {
             if (taskService != null) {
                 Shizuku.unbindUserService(serviceArgs, taskServiceConnection, true);
@@ -743,10 +743,10 @@ public class NotificationService extends NotificationListenerService {
             Log.w(TAG, "Failed to unbind TaskService", e);
         }
         
-        // 注销主屏接近传感器
+        // hủy đăng kýmàn hình chínhcảm biến tiệm cận
         unregisterMainProximitySensor();
         
-        // 清除实例
+        // xóainstance
         instance = null;
         
         stopForeground(true);

@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  *
- * Chief Tester: 汐木�? *
+ * Chief Tester: �? *
  * Co-developed with AI assistants:
  * - Cursor
  * - Claude-4.5-Sonnet
@@ -26,24 +26,24 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
- * 背屏通知显示Activity
- * 显示应用图标、名称和通知内容，带非线性动画效果
+ * màn hình sauthông báohiển thịActivity
+ * hiển thịứng dụngicon、tênvàthông báotrongchứa, tuyếntínhhoạt ảnhkết quả
  */
 public class RearScreenNotificationActivity extends Activity {
     private static final String TAG = "RearScreenNotificationActivity";
     
-    // 静态实例追踪
+    // instance static
     private static volatile RearScreenNotificationActivity currentInstance = null;
     
     private String packageName;
-    private boolean contentInitialized = false;  // 标记内容是否已初始化
+    private boolean contentInitialized = false;  // đánh dấutrongchứacóđãkhởi tạo
     
-    // 通知动画期间持续唤醒和杀死launcher
+    // thông báo hoạt ảnhtrong thời gianliên tụcđánh thức vàkilllauncher
     private android.os.Handler wakeupHandler;
     private Runnable wakeupRunnable;
     private boolean isWakeupRunning = false;
     
-    // 广播接收器：接收打断命令
+    // broadcast receiver：nhậnngắtlệnh
     private android.content.BroadcastReceiver interruptReceiver = new android.content.BroadcastReceiver() {
         @Override
         public void onReceive(android.content.Context context, android.content.Intent intent) {
@@ -67,59 +67,59 @@ public class RearScreenNotificationActivity extends Activity {
         
         super.onCreate(savedInstanceState);
         
-        // 判断当前所在的屏幕
+        // kiểm trahiện tạisởởmàn hình
         int displayId = 0;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             displayId = getDisplay().getDisplayId();
         }
         Log.d(TAG, String.format("[%tT.%tL] 📍 当前displayId=%d", onCreateStartTime, onCreateStartTime, displayId));
         
-        // 获取Intent数据
+        // lấyIntentdữ liệu
         packageName = getIntent().getStringExtra("packageName");
         String title = getIntent().getStringExtra("title");
         String text = getIntent().getStringExtra("text");
         long when = getIntent().getLongExtra("when", System.currentTimeMillis());
         boolean darkMode = getIntent().getBooleanExtra("darkMode", false);
         
-        // ⚠️ 关键：在 setContentView 之前强制使用背屏DPI
+        // ⚠️ keyphím：ở setContentView trước đósử dụngmàn hình sauDPI
         forceRearScreenDensityBeforeInflate();
         
-        // ✅ 统一设置布局，确保主屏占位后移动到背屏也能正常显示
+        // ✅ thống nhấtcài đặtbố cục, đảm bảo màn hình chính chiếm chỗ xong chuyển đến màn hình sau cũng hiển thị bình thường
         setContentView(R.layout.activity_rear_screen_notification);
         
-        // 应用暗夜模式或常规布局调整
+        // ứng dụngchế độ tốihoặcthườngbố cụcgọi
         if (darkMode) {
             applyDarkMode();
         } else {
             applyRegularLayout();
         }
         
-        // V3.2: 保持常亮 + 锁屏显示
+        // V3.2: giữgiữ sáng + khóa màn hìnhhiển thị
         getWindow().addFlags(
             android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
             android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
         );
         
-        // 适配新API：锁屏时显示
+        // phân phốimớiAPI：khi khóa màn hìnhhiển thị
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
         }
         
-        // 设置窗口背景，防止上滑回桌面时露出白色底
+        // cài đặtcửa sổsau, ngăn chặntrênquaymặtthời gianra
         getWindow().setBackgroundDrawableResource(R.drawable.bg_gradient_rear_screen);
         
-        // 如果在主屏启动，只是占位符，先隐藏内容，等待移动到背屏
+        // nếuởmàn hình chính khởi động, chỉlàchiếm chỗ, trướcẩntrongchứa, chờchuyển đến màn hình sau
         if (displayId == 0) {
             Log.d(TAG, String.format("[%tT.%tL] 💤 在主屏启动(占位)，隐藏内容等待移动", 
                 onCreateStartTime, onCreateStartTime));
             View container = findViewById(R.id.notification_container);
             container.setVisibility(View.INVISIBLE);
-            // 标记内容未初始化，等待onResume在背屏时初始化
+            // đánh dấutrongchứachưakhởi tạo, chờonResumeởmàn hình sauthời giankhởi tạo
             contentInitialized = false;
             Log.d(TAG, String.format("[%tT.%tL] ⏸️ 占位符模式，contentInitialized=false", 
                 onCreateStartTime, onCreateStartTime));
             
-            // 注册广播接收器（即使是占位符也要注册）
+            // đăng kýbroadcast receiver（tức làsử dụnglàchiếm chỗcũngcầnđăng ký）
             android.content.IntentFilter interruptFilter = new android.content.IntentFilter("com.tgwgroup.MiRearScreenSwitcher.INTERRUPT_NOTIFICATION_ANIMATION");
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 registerReceiver(interruptReceiver, interruptFilter, android.content.Context.RECEIVER_NOT_EXPORTED);
@@ -130,15 +130,15 @@ public class RearScreenNotificationActivity extends Activity {
             return;
         }
         
-        // --- 以下代码只在背屏执行 ---
+        // --- bằngdướicodechỉ ởmàn hình sau ---
         Log.d(TAG, String.format("[%tT.%tL] 🎯 在背屏执行，开始设置内容", onCreateStartTime, onCreateStartTime));
         
         contentInitialized = true;
         
-        // 获取背屏信息并应用安全区域适配
+        // lấythông tin màn hình sauvàứng dụngtoànphân vùngphân phối
         applySafeAreaPadding();
         
-        // 获取视图
+        // lấyđồ
         ImageView appIconCenter = findViewById(R.id.app_icon_center);
         ImageView appIconSmall = findViewById(R.id.app_icon_small);
         TextView appNameText = findViewById(R.id.app_name);
@@ -148,19 +148,19 @@ public class RearScreenNotificationActivity extends Activity {
         View appNameContainer = findViewById(R.id.app_name_container);
         View contentContainer = findViewById(R.id.notification_content_container);
         
-        // 加载应用信息
+        // tảiứng dụngthông tin
         try {
             PackageManager pm = getPackageManager();
             android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
             String appName = pm.getApplicationLabel(appInfo).toString();
             Drawable icon = pm.getApplicationIcon(packageName);
             
-            // 设置图标和应用名
+            // cài đặticonvàtên ứng dụng
             appIconCenter.setImageDrawable(icon);
             appIconSmall.setImageDrawable(icon);
             appNameText.setText(appName);
             
-            // 设置通知标题和内容
+            // cài đặtthông báotiêu đềvàtrongchứa
             if (title != null && !title.isEmpty()) {
                 notificationTitle.setText(title);
                 notificationTitle.setVisibility(View.VISIBLE);
@@ -175,7 +175,7 @@ public class RearScreenNotificationActivity extends Activity {
                 notificationContent.setVisibility(View.GONE);
             }
             
-            // 如果标题为空，隐藏间距
+            // nếutiêu đềlàtrống, ẩngiữa
             if (title == null || title.isEmpty()) {
                 notificationContent.setPadding(
                     notificationContent.getPaddingLeft(),
@@ -195,10 +195,10 @@ public class RearScreenNotificationActivity extends Activity {
             notificationContent.setText(text);
         }
         
-        // 开始动画
+        // bắt đầuhoạt ảnh
         startNotificationAnimation(appIconCenter, appNameContainer, contentContainer);
         
-        // 点击跳转到应用（优先在背屏启动）
+        // nhấpchuyển đếnứng dụng（ưutr tiên ởmàn hình saukhởi động）
         container.setOnClickListener(v -> {
             long clickTime = System.currentTimeMillis();
             Log.d(TAG, String.format("[%tT.%tL] 👆 收到点击，准备跳转 package=%s", clickTime, clickTime, packageName));
@@ -213,15 +213,15 @@ public class RearScreenNotificationActivity extends Activity {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
                 boolean started = false;
-                // 尝试直接在主屏启动（ActivityOptions -> display=0）
+                // thửtrực tiếpởmàn hình chính khởi động（ActivityOptions -> display=0）
                 try {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         android.app.ActivityOptions opts = android.app.ActivityOptions.makeBasic();
-                        // setLaunchDisplayId 在部分ROM可用；若不可用将抛异常，进入fallback
+                        // setLaunchDisplayId ởmột phầnROMcó thểngười dùng；khôngcó thểngười dùngsẽexception, vàovàofallback
                         java.lang.reflect.Method m = android.app.ActivityOptions.class.getMethod("setLaunchDisplayId", int.class);
                         m.invoke(opts, 0);
                         Log.d(TAG, String.format("[%tT.%tL] 🚀 尝试ActivityOptions在display=0(主屏)启动", clickTime, clickTime));
-                        // 点亮主屏
+                        // bật sángmàn hình chính
                         try {
                             ITaskService tsWake = NotificationService.getTaskService();
                             if (tsWake != null) {
@@ -240,14 +240,14 @@ public class RearScreenNotificationActivity extends Activity {
                 }
 
                 if (!started) {
-                    // 回退：使用shell在主屏启动
+                    // quaylùi：sử dụngshellởmàn hình chính khởi động
                     try {
                         String component = null;
                         if (launchIntent.getComponent() != null) {
                             component = launchIntent.getComponent().flattenToShortString();
                         }
                         if (component == null) {
-                            // 解析默认LAUNCHER Activity
+                            // parsemặc địnhLAUNCHER Activity
                             android.content.pm.PackageManager pm = getPackageManager();
                             Intent resolve = new Intent(Intent.ACTION_MAIN);
                             resolve.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -261,7 +261,7 @@ public class RearScreenNotificationActivity extends Activity {
                         if (component != null) {
                             ITaskService ts = NotificationService.getTaskService();
                             if (ts != null) {
-                                // 先唤醒主屏
+                                // trướcđánh thứcmàn hình chính
                                 try {
                                     ts.executeShellCommand("// 主屏唤醒功能已移除");
                                     Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
@@ -271,7 +271,7 @@ public class RearScreenNotificationActivity extends Activity {
                                 String cmd = "am start --display 0 -n " + component;
                                 boolean ok = ts.executeShellCommand(cmd);
                                 if (!ok) {
-                                    // 有些ROM不支持 --display 0，退化为默认显示
+                                    // cóROMkhông --display 0, lùihóalàmặc địnhhiển thị
                                     cmd = "am start -n " + component;
                                     ok = ts.executeShellCommand(cmd);
                                     Log.d(TAG, String.format("[%tT.%tL] 🔁 改为默认显示启动，结果=%s", clickTime, clickTime, ok));
@@ -288,7 +288,7 @@ public class RearScreenNotificationActivity extends Activity {
                 }
 
                 Log.d(TAG, String.format("[%tT.%tL] 🧹 结束通知Activity，started=%s", clickTime, clickTime, started));
-                // 无论如何结束当前通知Activity
+                // không cónhưkết thúchiện tạiActivity thông báo
                 finish();
             } catch (Exception e) {
                 Log.e(TAG, String.format("[%tT.%tL] ❌ 启动失败: %s", clickTime, clickTime, e.getMessage()), e);
@@ -296,7 +296,7 @@ public class RearScreenNotificationActivity extends Activity {
             }
         });
         
-        // V3.4: 根据设置的时间自动关闭
+        // V3.4: theocài đặtthời giantự độngđóng
         int duration = getSharedPreferences("mrss_settings", MODE_PRIVATE).getInt("notification_duration", 10);
         container.postDelayed(this::finish, duration * 1000L);
         
@@ -304,7 +304,7 @@ public class RearScreenNotificationActivity extends Activity {
         Log.d(TAG, String.format("[%tT.%tL] ✓ onCreate完成 (总耗时%dms)", 
             onCreateEndTime, onCreateEndTime, onCreateEndTime - onCreateStartTime));
         
-        // 注册广播接收器（监听打断事件）
+        // đăng kýbroadcast receiver（lắng nghengắtsự kiện）
         android.content.IntentFilter interruptFilter = new android.content.IntentFilter("com.tgwgroup.MiRearScreenSwitcher.INTERRUPT_NOTIFICATION_ANIMATION");
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(interruptReceiver, interruptFilter, android.content.Context.RECEIVER_NOT_EXPORTED);
@@ -313,47 +313,47 @@ public class RearScreenNotificationActivity extends Activity {
         }
         Log.d(TAG, String.format("[%tT.%tL] ✓ 已注册通知动画广播接收器", onCreateEndTime, onCreateEndTime));
         
-        // 设置为当前实例
+        // cài đặtlàhiện tạiinstance
         currentInstance = this;
         
-        // 初始化wakeup循环
+        // khởi tạowakeupvòng lặp
         wakeupHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         
-        // 如果在背屏，立即启动wakeup循环
+        // nếuởmàn hình sau, khởi động ngaywakeupvòng lặp
         if (displayId == 1) {
             startWakeupAndKillLoop();
         }
     }
     
     /**
-     * 执行通知动画
-     * 1. 大图标从中心缩放
-     * 2. 应用名毛玻璃容器淡入
-     * 3. 通知内容毛玻璃容器淡入
-     */
+ * thông báo hoạt ảnh
+ * 1. lớnicontừtrong
+ * 2. tên ứng dụngcontainerhiện dần
+ * 3. thông báotrongchứacontainerhiện dần
+ */
     private void startNotificationAnimation(ImageView iconCenter, View appNameContainer, View contentContainer) {
-        // 初始状态
+        // khởi tạotrạng thái
         appNameContainer.setAlpha(0f);
         appNameContainer.setScaleX(0.9f);
         appNameContainer.setScaleY(0.9f);
         contentContainer.setAlpha(0f);
         contentContainer.setTranslationY(30f);
         
-        // 启用硬件加速
+        // bậtphầnthêm
         iconCenter.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         appNameContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         contentContainer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         
-        // 阶段1: 中心图标放大 (0-300ms)
+        // giai đoạn1: trongiconlớn (0-300ms)
         iconCenter.animate()
             .scaleX(1.3f)
             .scaleY(1.3f)
             .setDuration(300)
             .setInterpolator(new AccelerateDecelerateInterpolator())
             .withEndAction(() -> {
-                // 阶段1.5: 停留展示 (300-800ms) - 增加500ms停留时间
+                // giai đoạn1.5: dừnggiữhiển thị (300-800ms) - thêm500msdừnggiữthời gian
                 iconCenter.postDelayed(() -> {
-                    // 阶段2: 中心图标缩小淡出 (800-1000ms)
+                    // giai đoạn2: trongiconnhỏẩn dần (800-1000ms)
                     iconCenter.animate()
                         .scaleX(0.5f)
                         .scaleY(0.5f)
@@ -366,7 +366,7 @@ public class RearScreenNotificationActivity extends Activity {
                         })
                         .start();
                     
-                    // 阶段3: 应用名毛玻璃容器淡入并缩放(800-1050ms)
+                    // giai đoạn3: tên ứng dụngcontainerhiện dầnvà(800-1050ms)
                     appNameContainer.animate()
                         .alpha(1f)
                         .scaleX(1f)
@@ -379,7 +379,7 @@ public class RearScreenNotificationActivity extends Activity {
                         })
                         .start();
                     
-                    // 阶段4: 通知内容毛玻璃容器从下方滑入 (950-1250ms)
+                    // giai đoạn4: thông báotrongchứacontainertừdướicáchvào (950-1250ms)
                     contentContainer.animate()
                         .alpha(1f)
                         .translationY(0f)
@@ -390,7 +390,7 @@ public class RearScreenNotificationActivity extends Activity {
                             contentContainer.setLayerType(View.LAYER_TYPE_NONE, null);
                         })
                         .start();
-                }, 500); // 停留500ms
+                }, 500); // dừnggiữ500ms
             })
             .start();
     }
@@ -401,23 +401,23 @@ public class RearScreenNotificationActivity extends Activity {
         long resumeTime = System.currentTimeMillis();
         Log.d(TAG, String.format("[%tT.%tL] 🟢 onResume", resumeTime, resumeTime));
         
-        // V3.2: 再次确保Window flags（保持常亮 + 锁屏显示）
+        // V3.2: lần nữađảm bảoWindow flags（giữgiữ sáng + khóa màn hìnhhiển thị）
         getWindow().addFlags(
             android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
             android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
         );
         
-        // 确保锁屏显示设置持续生效
+        // đảm bảokhóa màn hìnhhiển thịcài đặtliên tục
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
         }
         
-        // 确保Handler已初始化
+        // đảm bảoHandlerđãkhởi tạo
         if (wakeupHandler == null) {
             wakeupHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         }
         
-        // 检查是否已从主屏移动到背屏（占位符变为实际显示）
+        // kiểm tracóđãtừmàn hình chínhchuyển đến màn hình sau（chiếm chỗlàthực tếhiển thị）
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             int currentDisplayId = getDisplay() != null ? getDisplay().getDisplayId() : 0;
             View container = findViewById(R.id.notification_container);
@@ -425,22 +425,22 @@ public class RearScreenNotificationActivity extends Activity {
             Log.d(TAG, String.format("[%tT.%tL] 🔍 检查移动: displayId=%d, contentInitialized=%s, container=%s", 
                 resumeTime, resumeTime, currentDisplayId, contentInitialized, (container != null ? "存在" : "null")));
             
-            // 如果当前在背屏且内容还未初始化（说明是从主屏移动过来的）
+            // nếuhiện tạiởmàn hình sauvàtrongchứavẫnchưakhởi tạo（giải thíchlàtừmàn hình chínhchuyểnquá trình）
             if (currentDisplayId == 1 && !contentInitialized && container != null) {
                 Log.d(TAG, String.format("[%tT.%tL] 🔄 检测到从主屏移动到背屏，初始化内容", resumeTime, resumeTime));
                 
-                // 显示内容
+                // hiển thịtrongchứa
                 container.setVisibility(View.VISIBLE);
                 
-                // 获取Intent数据并初始化内容
+                // lấyIntentdữ liệuvàkhởi tạotrongchứa
                 String title = getIntent().getStringExtra("title");
                 String text = getIntent().getStringExtra("text");
                 
-                // 应用安全区域适配（只调用一次）
+                // ứng dụngtoànphân vùngphân phối（chỉgọi một lần）
                 applySafeAreaPadding();
                 contentInitialized = true;
                 
-                // 获取视图
+                // lấyđồ
                 ImageView appIconCenter = findViewById(R.id.app_icon_center);
                 ImageView appIconSmall = findViewById(R.id.app_icon_small);
                 TextView appNameText = findViewById(R.id.app_name);
@@ -449,19 +449,19 @@ public class RearScreenNotificationActivity extends Activity {
                 View appNameContainer = findViewById(R.id.app_name_container);
                 View contentContainer = findViewById(R.id.notification_content_container);
                 
-                // 加载应用信息
+                // tảiứng dụngthông tin
                 try {
                     PackageManager pm = getPackageManager();
                     android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
                     String appName = pm.getApplicationLabel(appInfo).toString();
                     Drawable icon = pm.getApplicationIcon(packageName);
                     
-                    // 设置图标和应用名
+                    // cài đặticonvàtên ứng dụng
                     appIconCenter.setImageDrawable(icon);
                     appIconSmall.setImageDrawable(icon);
                     appNameText.setText(appName);
                     
-                    // 设置通知标题和内容
+                    // cài đặtthông báotiêu đềvàtrongchứa
                     if (title != null && !title.isEmpty()) {
                         notificationTitle.setText(title);
                         notificationTitle.setVisibility(View.VISIBLE);
@@ -476,7 +476,7 @@ public class RearScreenNotificationActivity extends Activity {
                         notificationContent.setVisibility(View.GONE);
                     }
                     
-                    // 如果标题为空，隐藏间距
+                    // nếutiêu đềlàtrống, ẩngiữa
                     if (title == null || title.isEmpty()) {
                         notificationContent.setPadding(
                             notificationContent.getPaddingLeft(),
@@ -496,10 +496,10 @@ public class RearScreenNotificationActivity extends Activity {
                     if (text != null) notificationContent.setText(text);
                 }
                 
-                // 启动动画
+                // khởi độnghoạt ảnh
                 startNotificationAnimation(appIconCenter, appNameContainer, contentContainer);
                 
-                // 设置点击事件和自动关闭
+                // cài đặtnhấpsự kiệnvàtự độngđóng
                 container.setOnClickListener(v -> {
                     long clickTime = System.currentTimeMillis();
                     Log.d(TAG, String.format("[%tT.%tL] 👆 收到点击，准备跳转 package=%s", clickTime, clickTime, packageName));
@@ -514,14 +514,14 @@ public class RearScreenNotificationActivity extends Activity {
                         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
 
                         boolean started = false;
-                        // 尝试直接在主屏启动（ActivityOptions -> display=0）
+                        // thửtrực tiếpởmàn hình chính khởi động（ActivityOptions -> display=0）
                         try {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                 android.app.ActivityOptions opts = android.app.ActivityOptions.makeBasic();
                                 java.lang.reflect.Method m = android.app.ActivityOptions.class.getMethod("setLaunchDisplayId", int.class);
                                 m.invoke(opts, 0);
                                 Log.d(TAG, String.format("[%tT.%tL] 🚀 尝试ActivityOptions在display=0(主屏)启动", clickTime, clickTime));
-                                // 点亮主屏
+                                // bật sángmàn hình chính
                                 try {
                                     ITaskService tsWake = NotificationService.getTaskService();
                                     if (tsWake != null) {
@@ -540,14 +540,14 @@ public class RearScreenNotificationActivity extends Activity {
                         }
 
                         if (!started) {
-                            // 回退：使用shell在主屏启动
+                            // quaylùi：sử dụngshellởmàn hình chính khởi động
                             try {
                                 String component = null;
                                 if (launchIntent.getComponent() != null) {
                                     component = launchIntent.getComponent().flattenToShortString();
                                 }
                                 if (component == null) {
-                                    // 解析默认LAUNCHER Activity
+                                    // parsemặc địnhLAUNCHER Activity
                                     android.content.pm.PackageManager pm = getPackageManager();
                                     Intent resolve = new Intent(Intent.ACTION_MAIN);
                                     resolve.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -561,7 +561,7 @@ public class RearScreenNotificationActivity extends Activity {
                                 if (component != null) {
                                     ITaskService ts = NotificationService.getTaskService();
                                     if (ts != null) {
-                                        // 先唤醒主屏
+                                        // trướcđánh thứcmàn hình chính
                                         try {
                                             ts.executeShellCommand("// 主屏唤醒功能已移除");
                                             Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
@@ -594,16 +594,16 @@ public class RearScreenNotificationActivity extends Activity {
                     }
                 });
                 
-                // V3.4: 根据设置的时间自动关闭
+                // V3.4: theocài đặtthời giantự độngđóng
                 int duration = getSharedPreferences("mrss_settings", MODE_PRIVATE).getInt("notification_duration", 10);
                 container.postDelayed(this::finish, duration * 1000L);
                 
-                // 启动wakeup循环
+                // khởi độngwakeupvòng lặp
                 startWakeupAndKillLoop();
                 
                 Log.d(TAG, String.format("[%tT.%tL] ✓ 移动后初始化完成", resumeTime, resumeTime));
             } else if (currentDisplayId == 1 && !isWakeupRunning) {
-                // 如果已经在背屏但循环未启动，也启动（防止遗漏）
+                // nếuđãởmàn hình saunhưngvòng lặpchưakhởi động, cũngkhởi động（ngăn chặn）
                 startWakeupAndKillLoop();
             }
         }
@@ -614,7 +614,7 @@ public class RearScreenNotificationActivity extends Activity {
         super.onConfigurationChanged(newConfig);
         long configTime = System.currentTimeMillis();
         
-        // 记录配置变化（用于调试）
+        // ghicấu hìnhthay đổi（dùng chodebug）
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             int currentDisplayId = getDisplay() != null ? getDisplay().getDisplayId() : 0;
             int densityDpi = newConfig.densityDpi;
@@ -629,10 +629,10 @@ public class RearScreenNotificationActivity extends Activity {
         long destroyTime = System.currentTimeMillis();
         Log.d(TAG, String.format("[%tT.%tL] 🔴 onDestroy被调用", destroyTime, destroyTime));
         
-        // 停止wakeup循环
+        // dừngwakeupvòng lặp
         stopWakeupLoop();
         
-        // 注销广播接收器
+        // hủy đăng kýbroadcast receiver
         try {
             unregisterReceiver(interruptReceiver);
             Log.d(TAG, String.format("[%tT.%tL] ✓ 已注销通知动画广播接收器", destroyTime, destroyTime));
@@ -642,36 +642,36 @@ public class RearScreenNotificationActivity extends Activity {
         
         super.onDestroy();
         
-        // 检查是否是当前实例
+        // kiểm tracólàhiện tạiinstance
         if (this != currentInstance) {
             Log.w(TAG, String.format("[%tT.%tL] ⚠️ 这是旧实例，跳过恢复操作", destroyTime, destroyTime));
             return;
         }
         
-        // 通知动画管理器：通知动画结束
+        // thông báo animation manager: thông báo hoạt ảnhkết thúc
         boolean shouldRestore = RearAnimationManager.endAnimation(RearAnimationManager.AnimationType.NOTIFICATION);
         
-        // 只有正常结束时才恢复Launcher，被打断时不恢复
+        // chỉbình thườngkết thúcthời gianmớikhôi phụcLauncher, bị ngắtthời giankhôngkhôi phục
         if (!shouldRestore) {
             Log.d(TAG, String.format("[%tT.%tL] 🔄 通知动画被打断，跳过恢复Launcher", destroyTime, destroyTime));
             return;
         }
         
-        // V3.5: 检查是否需要恢复充电动画（常亮模式）
+        // V3.5: kiểm tracó cầnkhôi phục hoạt ảnh sạc（chế độ giữ sáng）
         if (RearAnimationManager.shouldResumeChargingAnimation()) {
             Log.d(TAG, String.format("[%tT.%tL] 🔋 检测到充电动画常亮模式，发送恢复广播", destroyTime, destroyTime));
             
-            // 发送恢复充电动画的广播
+            // gửikhôi phục hoạt ảnh sạcbroadcast
             android.content.Intent resumeIntent = new android.content.Intent("com.tgwgroup.MiRearScreenSwitcher.RESUME_CHARGING_ANIMATION");
             resumeIntent.setPackage(getPackageName());
             sendBroadcast(resumeIntent);
             
-            // 清除标记
+            // xóađánh dấu
             RearAnimationManager.clearChargingAlwaysOnFlag();
-            return;  // 不恢复官方Launcher
+            return;  // khôngkhôi phụcLauncher chính thức
         }
         
-        // 在背屏恢复官方Launcher
+        // ởmàn hình saukhôi phụcLauncher chính thức
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             int currentDisplayId = getDisplay() != null ? getDisplay().getDisplayId() : 0;
             Log.d(TAG, String.format("[%tT.%tL] 📍 当前displayId=%d", destroyTime, destroyTime, currentDisplayId));
@@ -679,7 +679,7 @@ public class RearScreenNotificationActivity extends Activity {
             if (currentDisplayId == 1) {
                 new Thread(() -> {
                     try {
-                        // 通过ChargingService获取TaskService（NotificationService也绑定了）
+                        // quaChargingServicelấyTaskService（NotificationServicecũngbind）
                         ITaskService taskService = ChargingService.getTaskService();
                         if (taskService != null) {
                             taskService.executeShellCommand(
@@ -700,24 +700,24 @@ public class RearScreenNotificationActivity extends Activity {
     @Override
     public void finish() {
         super.finish();
-        // 禁用转场动画
+        // tắtchuyểnhoạt ảnh
         overridePendingTransition(0, 0);
     }
     
     /**
-     * 在inflate布局之前强制使用背屏DPI（最关键！）
-     */
+ * ởinflatebố cụctrước đósử dụngmàn hình sauDPI（tối ưukeyphím！）
+ */
     private void forceRearScreenDensityBeforeInflate() {
         try {
-            // 从缓存获取背屏DPI（适配所有小米双屏设备）
+            // từcachelấymàn hình sauDPI（phân phốisởcónhỏmàn hìnhthiết bị）
             RearDisplayHelper.RearDisplayInfo info = DisplayInfoCache.getInstance().getCachedInfo();
             int rearScreenDpi = info.densityDpi;
             
-            // 如果缓存未初始化，立即执行dumpsys获取真实DPI
+            // nếucachechưakhởi tạo, ngaydumpsyslấythậtthựcDPI
             if (rearScreenDpi <= 0) {
                 Log.w(TAG, "⚠️ 背屏DPI未缓存，尝试实时获取");
                 
-                // 尝试获取TaskService（带重试机制）
+                // thửlấyTaskService（thử lại）
                 ITaskService taskService = null;
                 for (int retry = 0; retry < 3; retry++) {
                     taskService = NotificationService.getTaskService();
@@ -753,22 +753,22 @@ public class RearScreenNotificationActivity extends Activity {
                 }
             }
             
-            // 获取当前的 DisplayMetrics
+            // lấy hiện tại DisplayMetrics
             android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
             int currentDpi = metrics.densityDpi;
             
             Log.d(TAG, String.format("🔧 inflate前 - 当前DPI=%d, 背屏DPI=%d", currentDpi, rearScreenDpi));
             
-            // 强制修改为背屏DPI
+            // sửalàmàn hình sauDPI
             metrics.densityDpi = rearScreenDpi;
             metrics.density = rearScreenDpi / 160f;
             metrics.scaledDensity = metrics.density;
             
-            // 同时修改 Configuration
+            // cùngthời giansửa Configuration
             android.content.res.Configuration config = new android.content.res.Configuration(getResources().getConfiguration());
             config.densityDpi = rearScreenDpi;
             
-            // 应用新的配置
+            // ứng dụngmớicấu hình
             getResources().updateConfiguration(config, metrics);
             
             Log.d(TAG, String.format("✓ inflate前已强制应用背屏DPI: %d (density=%.2f)", 
@@ -780,34 +780,34 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 强制使用背屏的DPI（覆盖系统DPI）
-     */
+ * sử dụngmàn hình sauDPI（hệ thốngDPI）
+ */
     private void applyRearScreenDensity() {
         try {
-            // 获取背屏的DPI
+            // lấymàn hình sauDPI
             RearDisplayHelper.RearDisplayInfo info = DisplayInfoCache.getInstance().getCachedInfo();
             int rearScreenDpi = info.densityDpi;
             
-            // 获取当前的 DisplayMetrics
+            // lấy hiện tại DisplayMetrics
             android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
             int currentDpi = metrics.densityDpi;
             
             Log.d(TAG, String.format("🔧 当前DPI=%d, 背屏DPI=%d", currentDpi, rearScreenDpi));
             
-            // 如果当前DPI与背屏DPI不一致，强制修改
+            // nếuhiện tạiDPIvớimàn hình sauDPIkhôngmột, sửa
             if (currentDpi != rearScreenDpi) {
                 Log.d(TAG, String.format("⚠️ DPI不匹配！强制使用背屏DPI: %d", rearScreenDpi));
                 
-                // 修改 DisplayMetrics
+                // sửa DisplayMetrics
                 metrics.densityDpi = rearScreenDpi;
                 metrics.density = rearScreenDpi / 160f;
                 metrics.scaledDensity = metrics.density;
                 
-                // 同时修改 Configuration
+                // cùngthời giansửa Configuration
                 android.content.res.Configuration config = getResources().getConfiguration();
                 config.densityDpi = rearScreenDpi;
                 
-                // 更新 Resources
+                // cập nhật Resources
                 getResources().updateConfiguration(config, metrics);
                 
                 Log.d(TAG, String.format("✓ 已强制应用背屏DPI: %d, density=%.2f", 
@@ -821,26 +821,26 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 应用安全区域适配（避开Cutout）
-     */
+ * ứng dụngtoànphân vùngphân phối（bắt đầuCutout）
+ */
     private void applySafeAreaPadding() {
         try {
-            // 从缓存获取背屏信息
+            // từcachelấythông tin màn hình sau
             RearDisplayHelper.RearDisplayInfo info = DisplayInfoCache.getInstance().getCachedInfo();
             
-            // 如果没有cutout，不需要额外处理
+            // nếukhôngcócutout, không cầnthêmxử lý
             if (!info.hasCutout()) {
                 Log.d(TAG, "ℹ️ 背屏无Cutout，无需调整布局");
                 return;
             }
             
-            // 获取内容布局的根容器（RelativeLayout with id=notification_container）
+            // lấytrongchứabố cụccontainer（RelativeLayout with id=notification_container）
             android.view.View contentLayout = findViewById(R.id.notification_container);
             if (contentLayout != null && contentLayout.getLayoutParams() instanceof android.view.ViewGroup.MarginLayoutParams) {
                 android.view.ViewGroup.MarginLayoutParams params = 
                     (android.view.ViewGroup.MarginLayoutParams) contentLayout.getLayoutParams();
                 
-                // 检查是否已经设置过margin（避免重复设置）
+                // kiểm tracóđãcài đặtquá trìnhmargin（tránh lặp lạicài đặt）
                 if (params.leftMargin == info.cutout.left && 
                     params.topMargin == info.cutout.top && 
                     params.rightMargin == info.cutout.right && 
@@ -849,7 +849,7 @@ public class RearScreenNotificationActivity extends Activity {
                     return;
                 }
                 
-                // 设置margin（避开cutout区域），背景渐变色会填充cutout区域
+                // cài đặtmargin（bắt đầucutoutphân vùng）, saudải màusẽsạccutoutphân vùng
                 params.leftMargin = info.cutout.left;
                 params.topMargin = info.cutout.top;
                 params.rightMargin = info.cutout.right;
@@ -866,74 +866,74 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 应用暗夜模式
-     * 显示黑色背景层，毛玻璃去除，文字改为白色，调整布局
-     */
+ * ứng dụngchế độ tối
+ * hiển thịđensau, trừ, vănchữsửalà, gọibố cục
+ */
     private void applyDarkMode() {
         try {
             Log.d(TAG, "🌙 应用暗夜模式");
             
-            // 显示黑色背景层
+            // hiển thịđensau
             View darkBackground = findViewById(R.id.dark_mode_background);
             if (darkBackground != null) {
                 darkBackground.setVisibility(View.VISIBLE);
                 Log.d(TAG, "✓ 黑色背景层已显示");
             }
             
-            // 获取整体通知容器 - 确保垂直居中
+            // lấycơ thểthông báocontainer - đảm bảotrong
             View wrapperContainer = findViewById(R.id.notification_wrapper);
             if (wrapperContainer != null) {
                 Log.d(TAG, "✓ 整体通知容器已获取，保持垂直居中");
             }
             
-            // 获取毛玻璃容器 - 移除毛玻璃效果，设置为透明
+            // lấycontainer - gỡ bỏkết quả, cài đặtlàtrong suốt
             View contentContainer = findViewById(R.id.notification_content_container);
             if (contentContainer != null) {
                 contentContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
                 
-                // 移除容器的padding限制，让文字可以到屏幕边缘
+                // gỡ bỏcontainerpaddinggiới hạn, chovănchữcó thểđếnmàn hình
                 contentContainer.setPadding(0, 0, 0, 0);
                 Log.d(TAG, "✓ 毛玻璃容器已移除，布局已调整");
             }
             
-            // 获取应用名和图标容器 - 调整位置与标题内容对齐
+            // lấy tên ứng dụngvàiconcontainer - gọicấu hìnhvớitiêu đềtrongchứađối
             View appNameContainer = findViewById(R.id.app_name_container);
             if (appNameContainer != null) {
                 android.widget.LinearLayout.LayoutParams containerParams = (android.widget.LinearLayout.LayoutParams) appNameContainer.getLayoutParams();
-                containerParams.leftMargin = 0; // 与标题内容左侧对齐
+                containerParams.leftMargin = 0; // vớitiêu đềtrongchứatráiđối
                 appNameContainer.setLayoutParams(containerParams);
                 Log.d(TAG, "✓ 应用名容器已调整，与标题内容左侧对齐");
             }
             
-            // 获取应用名称 - 改为白色
+            // lấy tên ứng dụng - sửalà
             TextView appName = findViewById(R.id.app_name);
             if (appName != null) {
                 appName.setTextColor(android.graphics.Color.WHITE);
                 Log.d(TAG, "✓ 应用名称已设为白色");
             }
             
-            // 获取通知标题 - 改为白色，限制1行，调整间距
+            // lấythông báotiêu đề - sửalà, giới hạn1, gọigiữa
             TextView notificationTitle = findViewById(R.id.notification_title);
             if (notificationTitle != null) {
                 notificationTitle.setTextColor(android.graphics.Color.WHITE);
-                notificationTitle.setMaxLines(1); // 暗夜模式改为1行
+                notificationTitle.setMaxLines(1); // chế độ tốisửalà1
                 
-                // 调整标题的margin，与icon到标题的间距保持一致
+                // gọitiêu đềmargin, vớiiconđếntiêu đềgiữagiữmột
                 android.widget.LinearLayout.LayoutParams titleParams = (android.widget.LinearLayout.LayoutParams) notificationTitle.getLayoutParams();
-                titleParams.topMargin = 8; // 与icon到标题的间距一致
+                titleParams.topMargin = 8; // vớiiconđếntiêu đềgiữamột
                 notificationTitle.setLayoutParams(titleParams);
                 Log.d(TAG, "✓ 通知标题已设为白色，限制1行，间距已调整");
             }
             
-            // 获取通知内容 - 改为白色，限制6行，调整间距
+            // lấythông báotrongchứa - sửalà, giới hạn6, gọigiữa
             TextView notificationContent = findViewById(R.id.notification_content);
             if (notificationContent != null) {
                 notificationContent.setTextColor(android.graphics.Color.WHITE);
-                notificationContent.setMaxLines(6); // 暗夜模式改为6行
+                notificationContent.setMaxLines(6); // chế độ tốisửalà6
                 
-                // 调整内容的margin，与标题到内容的间距保持一致
+                // gọitrongchứamargin, vớitiêu đềđếntrongchứagiữagiữmột
                 android.widget.LinearLayout.LayoutParams contentParams = (android.widget.LinearLayout.LayoutParams) notificationContent.getLayoutParams();
-                contentParams.topMargin = 8; // 与标题到内容的间距一致
+                contentParams.topMargin = 8; // vớitiêu đềđếntrongchứagiữamột
                 notificationContent.setLayoutParams(contentParams);
                 Log.d(TAG, "✓ 通知内容已设为白色，限制6行，间距已调整");
             }
@@ -946,40 +946,40 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 应用常规布局调整
-     * 使用暗夜模式的布局调整，但保持原有的颜色
-     */
+ * ứng dụngthườngbố cụcgọi
+ * sử dụngchế độ tốibố cụcgọi, nhưnggiữnguyêncómàu sắc
+ */
     private void applyRegularLayout() {
         try {
             Log.d(TAG, "🎨 应用常规布局调整");
             
-            // 获取整体通知容器 - 确保垂直居中
+            // lấycơ thểthông báocontainer - đảm bảotrong
             View wrapperContainer = findViewById(R.id.notification_wrapper);
             if (wrapperContainer != null) {
                 Log.d(TAG, "✓ 整体通知容器已获取，保持垂直居中");
             }
             
-            // 获取毛玻璃容器 - 移除毛玻璃效果，设置为透明
+            // lấycontainer - gỡ bỏkết quả, cài đặtlàtrong suốt
             View contentContainer = findViewById(R.id.notification_content_container);
             if (contentContainer != null) {
-                // 移除毛玻璃效果，设置为透明
+                // gỡ bỏkết quả, cài đặtlàtrong suốt
                 contentContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
                 
-                // 移除容器的padding限制，让文字可以到屏幕边缘
+                // gỡ bỏcontainerpaddinggiới hạn, chovănchữcó thểđếnmàn hình
                 contentContainer.setPadding(0, 0, 0, 0);
                 Log.d(TAG, "✓ 常规布局容器已调整，毛玻璃已移除");
             }
             
-            // 获取应用名和图标容器 - 调整位置与标题内容对齐
+            // lấy tên ứng dụngvàiconcontainer - gọicấu hìnhvớitiêu đềtrongchứađối
             View appNameContainer = findViewById(R.id.app_name_container);
             if (appNameContainer != null) {
                 android.widget.LinearLayout.LayoutParams containerParams = (android.widget.LinearLayout.LayoutParams) appNameContainer.getLayoutParams();
-                containerParams.leftMargin = 0; // 与标题内容左侧对齐
+                containerParams.leftMargin = 0; // vớitiêu đềtrongchứatráiđối
                 appNameContainer.setLayoutParams(containerParams);
                 Log.d(TAG, "✓ 应用名容器已调整，与标题内容左侧对齐");
             }
             
-            // 获取应用名称 - 改为白色并添加阴影
+            // lấy tên ứng dụng - sửalàvàthêm
             TextView appName = findViewById(R.id.app_name);
             if (appName != null) {
                 appName.setTextColor(android.graphics.Color.WHITE);
@@ -987,32 +987,32 @@ public class RearScreenNotificationActivity extends Activity {
                 Log.d(TAG, "✓ 应用名称已设为白色，添加阴影");
             }
             
-            // 获取通知标题 - 改为白色并添加阴影，调整间距和行数
+            // lấythông báotiêu đề - sửalàvàthêm, gọigiữavàsố
             TextView notificationTitle = findViewById(R.id.notification_title);
             if (notificationTitle != null) {
-                // 改为白色文字并添加阴影
+                // sửalàvănchữvàthêm
                 notificationTitle.setTextColor(android.graphics.Color.WHITE);
                 notificationTitle.setShadowLayer(3, 0, 1, android.graphics.Color.parseColor("#40000000"));
-                notificationTitle.setMaxLines(1); // 限制1行
+                notificationTitle.setMaxLines(1); // giới hạn1
                 
-                // 调整标题的margin，与icon到标题的间距保持一致
+                // gọitiêu đềmargin, vớiiconđếntiêu đềgiữagiữmột
                 android.widget.LinearLayout.LayoutParams titleParams = (android.widget.LinearLayout.LayoutParams) notificationTitle.getLayoutParams();
-                titleParams.topMargin = 8; // 与icon到标题的间距一致
+                titleParams.topMargin = 8; // vớiiconđếntiêu đềgiữamột
                 notificationTitle.setLayoutParams(titleParams);
                 Log.d(TAG, "✓ 通知标题已设为白色，添加阴影，间距已调整");
             }
             
-            // 获取通知内容 - 调整间距和行数，保持原有颜色
+            // lấythông báotrongchứa - gọigiữavàsố, giữnguyêncómàu sắc
             TextView notificationContent = findViewById(R.id.notification_content);
             if (notificationContent != null) {
-                // 改为白色文字并添加阴影
+                // sửalàvănchữvàthêm
                 notificationContent.setTextColor(android.graphics.Color.WHITE);
                 notificationContent.setShadowLayer(3, 0, 1, android.graphics.Color.parseColor("#40000000"));
-                notificationContent.setMaxLines(6); // 限制6行
+                notificationContent.setMaxLines(6); // giới hạn6
                 
-                // 调整内容的margin，与标题到内容的间距保持一致
+                // gọitrongchứamargin, vớitiêu đềđếntrongchứagiữagiữmột
                 android.widget.LinearLayout.LayoutParams contentParams = (android.widget.LinearLayout.LayoutParams) notificationContent.getLayoutParams();
-                contentParams.topMargin = 8; // 与标题到内容的间距一致
+                contentParams.topMargin = 8; // vớitiêu đềđếntrongchứagiữamột
                 notificationContent.setLayoutParams(contentParams);
                 Log.d(TAG, "✓ 通知内容已设为白色，添加阴影，间距已调整");
             }
@@ -1025,8 +1025,8 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 启动通知动画期间的唤醒循环
-     */
+ * khởi độngthông báo hoạt ảnhtrong thời gianvòng lặp đánh thức
+ */
     private void startWakeupAndKillLoop() {
         if (isWakeupRunning) {
             Log.w(TAG, "⚠️ Wakeup loop already running");
@@ -1040,17 +1040,17 @@ public class RearScreenNotificationActivity extends Activity {
             public void run() {
                 if (!isWakeupRunning) return;
                 
-                // 检查Activity是否还在运行
+                // kiểm traActivitycóvẫnở
                 if (isFinishing()) {
                     stopWakeupLoop();
                     return;
                 }
                 
-                // 获取TaskService
+                // lấyTaskService
                 ITaskService taskService = NotificationService.getTaskService();
                 
                 if (taskService != null) {
-                    // 发送wakeup命令
+                    // gửi lệnh wakeup
                     try {
                         taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
                         Log.d(TAG, "✓ Wakeup sent");
@@ -1061,14 +1061,14 @@ public class RearScreenNotificationActivity extends Activity {
                     Log.w(TAG, "⚠️ TaskService is null, skipping wakeup");
                 }
                 
-                // 100ms后继续
+                // sau 100ms tiếp tục
                 if (wakeupHandler != null) {
                     wakeupHandler.postDelayed(this, 100);
                 }
             }
         };
         
-        // 立即开始
+        // bắt đầu ngay
         if (wakeupHandler != null) {
             wakeupHandler.post(wakeupRunnable);
             Log.d(TAG, "✓ Wakeup loop started");
@@ -1076,8 +1076,8 @@ public class RearScreenNotificationActivity extends Activity {
     }
     
     /**
-     * 停止唤醒循环
-     */
+ * dừng vòng lặp đánh thức
+ */
     private void stopWakeupLoop() {
         isWakeupRunning = false;
         if (wakeupHandler != null && wakeupRunnable != null) {

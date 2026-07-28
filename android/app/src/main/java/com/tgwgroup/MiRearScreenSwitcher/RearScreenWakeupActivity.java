@@ -2,9 +2,9 @@
  * Author: AntiOblivionis
  * QQ: 319641317
  * Github: https://github.com/GoldenglowSusie/
- * Bilibili: 罗德岛T0驭械术师澄闪
+ * Bilibili: Rhodes Island T0 Thuật sư điều khiển cơ giới Chengshan
  * 
- * Chief Tester: 汐木泽
+ * Chief Tester: Ximuze
  * 
  * Co-developed with AI assistants:
  * - Cursor
@@ -25,22 +25,22 @@ import android.util.Log;
 import android.view.WindowManager;
 
 /**
- * 专门用于点亮背屏的透明Activity
- * 参考 MiRearScreenNotification 的实现
- * V2.1: 支持动态旋转控制
+ * dùng chobật sángmàn hình sautrong suốtActivity
+ * tham MiRearScreenNotification thựchiện
+ * V2.1: độngtrạng tháixoay
  */
 public class RearScreenWakeupActivity extends Activity {
     private static final String TAG = "RearScreenWakeup";
     
-    // 静态变量存储背屏旋转方向
+    // biến statictồnmàn hình sauxoaycáchvề
     private static int sRearDisplayRotation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
     
     /**
-     * V2.1: 设置背屏旋转方向（从外部调用）
-     * @param rotation 旋转方向 (0=0°, 1=90°, 2=180°, 3=270°)
-     */
+ * V2.1: cài đặtmàn hình sauxoaycáchvề（từngoàibộ phậngọi）
+ * @param rotation xoaycáchvề (0=0°, 1=90°, 2=180°, 3=270°)
+ */
     public static void setRearDisplayRotation(int rotation) {
-        // 将rotation值转换为ActivityInfo常量
+        // sẽrotationgiá trịchuyểnđổilàActivityInfothườnglượng
         switch (rotation) {
             case 0:
                 sRearDisplayRotation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
@@ -64,45 +64,45 @@ public class RearScreenWakeupActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // 应用旋转设置
+        // ứng dụngxoaycài đặt
         if (sRearDisplayRotation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED) {
             setRequestedOrientation(sRearDisplayRotation);
         }
         
-        // 获取当前display
+        // lấy hiện tạidisplay
         int displayId = 0;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             displayId = getDisplay().getDisplayId();
         }
-        // 如果在主屏，什么都不做
+        // nếuởmàn hình chính, đềukhông
         if (displayId == 0) {
             return;
         }
         
-        // --- 以下代码只在背屏 (displayId == 1) 执行 ---
+        // --- bằngdướicodechỉ ởmàn hình sau (displayId == 1) ---
         
-        // 关键：在背屏时点亮屏幕并保持常亮
+        // keyphím：ởmàn hình sauthời gianbật sáng màn hìnhvàgiữgiữ sáng
         getWindow().addFlags(
             WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON |
             WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
         );
         
-        // 适配新API
+        // phân phốimớiAPI
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
         }
-        // 延迟关闭（给予足够时间点亮屏幕）
+        // trễđóng（thời gianbật sáng màn hình）
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             finish();
-        }, 1000); // 1秒后关闭
+        }, 1000); // sau 1 giâyđóng
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-        // 再次确保点亮
+        // lần nữađảm bảobật sáng
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);
             setTurnScreenOn(true);
@@ -117,7 +117,7 @@ public class RearScreenWakeupActivity extends Activity {
     @Override
     public void finish() {
         super.finish();
-        // 禁用转场动画
+        // tắtchuyểnhoạt ảnh
         overridePendingTransition(0, 0);
     }
 }
