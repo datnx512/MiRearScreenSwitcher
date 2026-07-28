@@ -18,7 +18,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     // Provide benign mock responses so HomePage's platform calls don't throw
     // MissingPluginException during widget tests.
-    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_channel, (MethodCall call) async {
       switch (call.method) {
         case 'checkShizuku':
@@ -36,13 +36,13 @@ void main() {
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_channel, null);
   });
 
   /// Builds a MaterialApp pre-configured with the same localization delegates
   /// the real app uses, so AppLocalizations.of(context) works in tests.
-  Widget _buildApp(Widget home) {
+  Widget buildApp(Widget home) {
     return MaterialApp(
       home: home,
       supportedLocales: const [
@@ -64,7 +64,7 @@ void main() {
 
   /// Sets a wide-enough logical surface so the side-by-side link cards in
   /// HomePage (donation + QQ group) don't overflow.
-  void _usePhoneSurface(WidgetTester tester) {
+  void usePhoneSurface(WidgetTester tester) {
     tester.view.physicalSize = const Size(1200, 2600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -73,13 +73,13 @@ void main() {
 
   group('HomePage', () {
     testWidgets('renders without error', (WidgetTester tester) async {
-      _usePhoneSurface(tester);
+      usePhoneSurface(tester);
       final themeController = ThemeController();
       final localeController = LocaleController();
       await themeController.load();
       await localeController.load();
 
-      await tester.pumpWidget(_buildApp(
+      await tester.pumpWidget(buildApp(
         HomePage(
           themeController: themeController,
           localeController: localeController,
@@ -97,13 +97,13 @@ void main() {
     });
 
     testWidgets('renders the dark-mode toggle icon', (WidgetTester tester) async {
-      _usePhoneSurface(tester);
+      usePhoneSurface(tester);
       final themeController = ThemeController();
       final localeController = LocaleController();
       await themeController.load();
       await localeController.load();
 
-      await tester.pumpWidget(_buildApp(
+      await tester.pumpWidget(buildApp(
         HomePage(
           themeController: themeController,
           localeController: localeController,

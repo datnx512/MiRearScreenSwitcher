@@ -19,4 +19,38 @@
     <string name="notif_running_on_rear">Đang chạy ở màn hình sau</string>
     <string name="notif_click_to_return">Chạm để chuyển %s về màn hình chính</string>
     <string name="notif_mrss_running">MRSS hiện đang chạy</string>
+    <!-- SwitchToRearTileService -->
+    <string name="toast_service_not_ready">Dịch vụ chưa sẵn sàng</string>
+    <string name="toast_open_app_auth">Vui lòng mở cấp quyền ứng dụng trước</string>
+    <string name="tile_switching">Đang chuyển...</string>
+    <string name="toast_rear_occupied">✗ Màn hình sau đã bị chiếm</string>
+    <string name="toast_switched">✓ Đã chuyển</string>
+    <string name="toast_failed">✗ Thất bại</string>
+    <string name="toast_app_not_found_tile">✗ Không tìm thấy ứng dụng</string>
+    <string name="toast_operation_failed">✗ Thao tác thất bại</string>
+    <!-- RearScreenRecordTileService -->
+    <string name="toast_grant_overlay_permission">Vui lòng cấp quyền cửa sổ nổi trước</string>
+    <!-- ScreenRecordService -->
+    <string name="toast_show_overlay_failed">Hiển thị cửa sổ nổi thất bại: </string>
+    <string name="toast_stop_recording_first">Vui lòng dừng quay trước</string>
+    <string name="toast_service_not_ready_retry">Dịch vụ chưa sẵn sàng, vui lòng thử lại sau</string>
+    <string name="toast_screenrecord_not_supported">Hệ thống không hỗ trợ lệnh screenrecord</string>
+    <string name="toast_start_record_failed">Khởi động quay màn hình thất bại</string>
+    <string name="toast_record_process_failed">Tiến trình quay màn hình khởi động thất bại</string>
+    <string name="toast_start_recording_rear">Bắt đầu quay màn hình sau</string>
+    <string name="toast_record_failed">Quay màn hình thất bại: </string>
+    <string name="toast_service_not_ready_stop">Dịch vụ chưa sẵn sàng, không thể dừng quay</string>
+    <string name="toast_record_saved_movies">Đã lưu video quay vào thư mục Movies</string>
+    <string name="toast_record_may_failed">Quay có thể thất bại, vui lòng kiểm tra thư mục Movies</string>
+    <!-- RearScreenshotTileService -->
+    <string name="toast_screenshot_service_not_ready">✗ Dịch vụ chưa sẵn sàng</string>
+    <string name="toast_screenshot_saved_tile">✓ Đã lưu</string>
+    <!-- RearScreenKeeperService -->
+    <string name="notif_channel_desc_subscreen">com.xiaomi.subscreencenter.SubScreenLauncher thật là cao ngạo nhỉ</string>
+    <string name="default_app_name">Ứng dụng</string>
+    <!-- MainActivity -->
+    <string name="error_install_coolapk">Vui lòng cài đặt CoolApk trước</string>
+    <string name="error_open_failed">Mở thất bại: </string>
+    <!-- UriCommandService -->
+    <string name="toast_switch_failed_detail">Chuyển thất bại: </string>
 </resources>

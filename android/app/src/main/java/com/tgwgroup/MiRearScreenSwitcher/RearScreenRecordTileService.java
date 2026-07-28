@@ -51,7 +51,7 @@ public class RearScreenRecordTileService extends TileService {
             if (!Settings.canDrawOverlays(this)) {
                 Log.w(TAG, "无悬浮窗权限");
                 
-                Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.toast_grant_overlay_permission), Toast.LENGTH_LONG).show();
                 
                 // chuyển đếnquyềncài đặttrang
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);

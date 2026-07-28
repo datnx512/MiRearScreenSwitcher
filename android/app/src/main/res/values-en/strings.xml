@@ -19,4 +19,38 @@
     <string name="notif_running_on_rear">running on rear screen</string>
     <string name="notif_click_to_return">Tap to switch %s back to main screen</string>
     <string name="notif_mrss_running">MRSS is currently running</string>
+    <!-- SwitchToRearTileService -->
+    <string name="toast_service_not_ready">Service not ready</string>
+    <string name="toast_open_app_auth">Please open app authorization first</string>
+    <string name="tile_switching">Switching...</string>
+    <string name="toast_rear_occupied">✗ Rear screen occupied</string>
+    <string name="toast_switched">✓ Switched</string>
+    <string name="toast_failed">✗ Failed</string>
+    <string name="toast_app_not_found_tile">✗ App not found</string>
+    <string name="toast_operation_failed">✗ Operation failed</string>
+    <!-- RearScreenRecordTileService -->
+    <string name="toast_grant_overlay_permission">Please grant overlay window permission first</string>
+    <!-- ScreenRecordService -->
+    <string name="toast_show_overlay_failed">Failed to show overlay: </string>
+    <string name="toast_stop_recording_first">Please stop recording first</string>
+    <string name="toast_service_not_ready_retry">Service not ready, please retry later</string>
+    <string name="toast_screenrecord_not_supported">System does not support screenrecord command</string>
+    <string name="toast_start_record_failed">Failed to start screen recording</string>
+    <string name="toast_record_process_failed">Screen recording process failed to start</string>
+    <string name="toast_start_recording_rear">Started recording rear screen</string>
+    <string name="toast_record_failed">Recording failed: </string>
+    <string name="toast_service_not_ready_stop">Service not ready, cannot stop recording</string>
+    <string name="toast_record_saved_movies">Recording saved to Movies folder</string>
+    <string name="toast_record_may_failed">Recording may have failed, please check Movies folder</string>
+    <!-- RearScreenshotTileService -->
+    <string name="toast_screenshot_service_not_ready">✗ Service not ready</string>
+    <string name="toast_screenshot_saved_tile">✓ Saved</string>
+    <!-- RearScreenKeeperService -->
+    <string name="notif_channel_desc_subscreen">com.xiaomi.subscreencenter.SubScreenLauncher is so high and mighty</string>
+    <string name="default_app_name">App</string>
+    <!-- MainActivity -->
+    <string name="error_install_coolapk">Please install CoolApk first</string>
+    <string name="error_open_failed">Open failed: </string>
+    <!-- UriCommandService -->
+    <string name="toast_switch_failed_detail">Switch failed: </string>
 </resources>

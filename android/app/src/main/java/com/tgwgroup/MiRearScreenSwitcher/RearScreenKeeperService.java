@@ -153,7 +153,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
 
                     // hiển thị Toast trễgợi ý
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                        Toast.makeText(this, appName + " 已返回主屏", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, appName + " " + getString(R.string.toast_return_to_main), Toast.LENGTH_SHORT).show();
                     }, 100);
 
                     // dừngdịch vụ
@@ -551,7 +551,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     getString(R.string.notif_kernel_service),
                     NotificationManager.IMPORTANCE_LOW // thấpnặngcầntính, ítcan thiệp
             );
-            channel.setDescription("com.xiaomi.subscreencenter.SubScreenLauncher真是高高在上呢");
+            channel.setDescription(getString(R.string.notif_channel_desc_subscreen));
             channel.setShowBadge(false); // không hiển thịđánh dấu
             channel.enableLights(false); // khônglấp lánhLED
             channel.enableVibration(false); // khôngrung
@@ -589,7 +589,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     CHANNEL_ID,
                     context.getString(R.string.notif_kernel_service),
                     NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("com.xiaomi.subscreencenter.SubScreenLauncher真是高高在上呢");
+            channel.setDescription(getString(R.string.notif_channel_desc_subscreen));
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
@@ -612,7 +612,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
  */
     private Notification buildNotification() {
         // lấy tên ứng dụng
-        String appName = "应用";
+        String appName = getString(R.string.default_app_name);
 
         if (monitoredTaskInfo != null && monitoredTaskInfo.contains(":")) {
             String packageName = monitoredTaskInfo.split(":")[0];
@@ -847,7 +847,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     if (success) {
                         // hiển thị Toast trễ
                         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            Toast.makeText(RearScreenKeeperService.this, appName + " 已返回主屏", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(RearScreenKeeperService.this, appName + " " + getString(R.string.toast_return_to_main), Toast.LENGTH_SHORT).show();
                         }, 100);
                     } else {
                         Log.w(TAG, "⚠ Failed to return task (may already be on main display)");

@@ -105,9 +105,9 @@ public class RearScreenshotTileService extends TileService {
                 try {
                     if (taskService == null) {
                         Log.w(TAG, "TaskService not available");
-                        showTemporaryFeedback("✗ 服务未就绪");
+                        showTemporaryFeedback(getString(R.string.toast_screenshot_service_not_ready));
                         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                            Toast.makeText(this, "✗ 服务未就绪", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, getString(R.string.toast_screenshot_service_not_ready), Toast.LENGTH_SHORT).show();
                         });
                         return;
                     }
@@ -115,7 +115,7 @@ public class RearScreenshotTileService extends TileService {
                     boolean success = taskService.takeRearScreenshot();
 
                     // không cóthành côngthất bạiđềuhiển thịthành côngToast
-                    showTemporaryFeedback("✓ 已保存");
+                    showTemporaryFeedback(getString(R.string.toast_screenshot_saved_tile));
 
                     // thu gọn Control Center trước
                     try {
@@ -133,7 +133,7 @@ public class RearScreenshotTileService extends TileService {
                 } catch (Exception e) {
                     Log.e(TAG, "Screenshot error", e);
                     // tức làsử dụngexceptioncũnghiển thịthành côngToast
-                    showTemporaryFeedback("✓ 已保存");
+                    showTemporaryFeedback(getString(R.string.toast_screenshot_saved_tile));
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         Toast.makeText(this, getString(R.string.toast_screenshot_saved), Toast.LENGTH_SHORT).show();
                     });

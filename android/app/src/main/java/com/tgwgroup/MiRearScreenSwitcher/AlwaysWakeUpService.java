@@ -103,10 +103,10 @@ public class AlwaysWakeUpService extends Service {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                 channelId,
-                "MRSS内核服务",
+                getString(R.string.notif_kernel_service),
                 NotificationManager.IMPORTANCE_LOW
             );
-            channel.setDescription("MRSS目前正在运行");
+            channel.setDescription(getString(R.string.notif_mrss_running));
             channel.setShowBadge(false);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
@@ -128,8 +128,8 @@ public class AlwaysWakeUpService extends Service {
         }
         
         Notification notification = builder
-            .setContentTitle("MRSS内核服务")
-            .setContentText("MRSS目前正在运行")
+            .setContentTitle(getString(R.string.notif_kernel_service))
+            .setContentText(getString(R.string.notif_mrss_running))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
             .setOngoing(true)

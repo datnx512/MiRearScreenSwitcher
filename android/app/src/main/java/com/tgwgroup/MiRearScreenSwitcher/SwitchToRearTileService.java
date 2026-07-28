@@ -164,7 +164,7 @@ public class SwitchToRearTileService extends TileService {
     private void switchCurrentAppToRearDisplay() {
         if (taskService == null) {
             Log.w(TAG, "TaskService not available!");
-            showTemporaryFeedback("服务未就绪");
+            showTemporaryFeedback(getString(R.string.toast_service_not_ready));
 
             // thửlàm lạibind
             bindTaskService();
@@ -174,7 +174,7 @@ public class SwitchToRearTileService extends TileService {
                 if (taskService != null) {
                     performSwitch();
                 } else {
-                    showTemporaryFeedback("请先打开应用授权");
+                    showTemporaryFeedback(getString(R.string.toast_open_app_auth));
                 }
             }, 1000);
             return;
@@ -188,7 +188,7 @@ public class SwitchToRearTileService extends TileService {
         Tile tile = getQsTile();
         if (tile != null) {
             tile.setState(Tile.STATE_INACTIVE); // giữtắttrạng thái
-            tile.setSubtitle("切换中...");
+            tile.setSubtitle(getString(R.string.tile_switching));
             // không hiển thị"đãbật"
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 tile.setStateDescription("");
@@ -223,7 +223,7 @@ public class SwitchToRearTileService extends TileService {
                                     Toast.LENGTH_LONG).show();
                         }, 300);
 
-                        showTemporaryFeedback("✗ 背屏已占用");
+                        showTemporaryFeedback(getString(R.string.toast_rear_occupied));
                         return;
                     }
                 } catch (Exception e) {
@@ -316,7 +316,7 @@ public class SwitchToRearTileService extends TileService {
                         Log.w(TAG, "Failed to launch wakeup activity", e);
                     }
 
-                    showTemporaryFeedback("✓ 已切换");
+                    showTemporaryFeedback(getString(R.string.toast_switched));
                 } else {
                     // thu gọn Control Center trước
                     try {
@@ -330,15 +330,15 @@ public class SwitchToRearTileService extends TileService {
                         Toast.makeText(this, getString(R.string.toast_switch_failed), Toast.LENGTH_SHORT).show();
                     }, 300);
 
-                    showTemporaryFeedback("✗ 失败");
+                    showTemporaryFeedback(getString(R.string.toast_failed));
                 }
             } else {
                 Log.w(TAG, "No foreground app found");
-                showTemporaryFeedback("✗ 未找到应用");
+                showTemporaryFeedback(getString(R.string.toast_app_not_found_tile));
             }
         } catch (Exception e) {
             Log.e(TAG, "Error switching app", e);
-            showTemporaryFeedback("✗ 操作失败");
+            showTemporaryFeedback(getString(R.string.toast_operation_failed));
         }
     }
 
