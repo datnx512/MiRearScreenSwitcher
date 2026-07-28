@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_page.dart';
+import 'screens/onboarding_page.dart';
 import 'services/theme_controller.dart';
 import 'services/locale_controller.dart';
 
@@ -31,18 +33,32 @@ class DisplaySwitcherApp extends StatefulWidget {
 class _DisplaySwitcherAppState extends State<DisplaySwitcherApp> {
   final _themeController = ThemeController();
   final _localeController = LocaleController();
+  bool _showOnboarding = false;
 
   @override
   void initState() {
     super.initState();
     _themeController.load();
     _localeController.load();
+    _checkOnboarding();
     _themeController.addListener(() {
       if (mounted) setState(() {});
     });
     _localeController.addListener(() {
       if (mounted) setState(() {});
     });
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool('onboarding_completed') ?? false;
+    if (mounted) {
+      setState(() => _showOnboarding = !completed);
+    }
+  }
+
+  void _completeOnboarding() {
+    setState(() => _showOnboarding = false);
   }
 
   @override
@@ -109,7 +125,9 @@ class _DisplaySwitcherAppState extends State<DisplaySwitcherApp> {
         }
         return const Locale('vi', '');
       },
-      home: HomePage(
+      home: _showOnboarding
+          ? OnboardingPage(onComplete: _completeOnboarding)
+          : HomePage(
         themeController: _themeController,
         localeController: _localeController,
       ),
