@@ -589,7 +589,7 @@ public class RearScreenKeeperService extends Service implements SensorEventListe
                     CHANNEL_ID,
                     context.getString(R.string.notif_kernel_service),
                     NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription(getString(R.string.notif_channel_desc_subscreen));
+            channel.setDescription(context.getString(R.string.notif_channel_desc_subscreen));
             NotificationManager manager = context.getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(channel);

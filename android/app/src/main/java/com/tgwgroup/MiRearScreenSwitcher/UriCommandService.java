@@ -604,7 +604,7 @@ public class UriCommandService extends IntentService {
 
         } catch (Exception e) {
             Log.e(TAG, "切换指定应用失败", e);
-            showToast("切换失败: " + e.getMessage());
+            showToast(getString(R.string.toast_switch_failed_detail) + e.getMessage());
         }
     }
 

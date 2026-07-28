@@ -433,7 +433,7 @@ public class MainActivity extends FlutterActivity {
                             result.success(null);
                         } catch (Exception e) {
                             Log.e(TAG, "Failed to open CoolApk profile", e);
-                            result.error("ERROR", "请先安装酷安应用", null);
+                            result.error("ERROR", getString(R.string.error_install_coolapk), null);
                         }
                         break;
                     }
@@ -448,7 +448,7 @@ public class MainActivity extends FlutterActivity {
                             result.success(null);
                         } catch (Exception e) {
                             Log.e(TAG, "Failed to open CoolApk profile", e);
-                            result.error("ERROR", "请先安装酷安应用", null);
+                            result.error("ERROR", getString(R.string.error_install_coolapk), null);
                         }
                         break;
                     }
@@ -463,7 +463,7 @@ public class MainActivity extends FlutterActivity {
                             result.success(null);
                         } catch (Exception e) {
                             Log.e(TAG, "Failed to open tutorial", e);
-                            result.error("ERROR", "打开失败: " + e.getMessage(), null);
+                            result.error("ERROR", getString(R.string.error_open_failed) + e.getMessage(), null);
                         }
                         break;
                     }
@@ -478,7 +478,7 @@ public class MainActivity extends FlutterActivity {
                             result.success(null);
                         } catch (Exception e) {
                             Log.e(TAG, "Failed to open donation page", e);
-                            result.error("ERROR", "打开失败: " + e.getMessage(), null);
+                            result.error("ERROR", getString(R.string.error_open_failed) + e.getMessage(), null);
                         }
                         break;
                     }
@@ -493,7 +493,7 @@ public class MainActivity extends FlutterActivity {
                             result.success(null);
                         } catch (Exception e) {
                             Log.e(TAG, "Failed to open QQ group page", e);
-                            result.error("ERROR", "打开失败: " + e.getMessage(), null);
+                            result.error("ERROR", getString(R.string.error_open_failed) + e.getMessage(), null);
                         }
                         break;
                     }
