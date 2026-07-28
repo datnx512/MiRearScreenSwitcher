@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:ui';
 import '../l10n/app_localizations.dart';
 import '../services/theme_controller.dart';
 import '../services/locale_controller.dart';
 import '../services/backup_service.dart';
+import '../services/update_checker.dart';
 import '../widgets/squircle.dart';
+import 'charging_settings_page.dart';
+import 'auto_switch_rules_page.dart';
 
 /// Settings page with appearance, language, backup/restore, and about sections.
 class SettingsPage extends StatefulWidget {
@@ -86,6 +90,66 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 24),
 
+                // === Tính năng màn hình sau ===
+                _buildSectionTitle('📱 Tính năng màn hình sau'),
+                const SizedBox(height: 12),
+                _buildGlassCard(
+                  children: [
+                    _buildNavRow(
+                      icon: '🕐',
+                      title: 'Đồng hồ màn hình sau',
+                      subtitle: 'Hiển thị giờ + ngày + pin',
+                      onTap: () {
+                        try {
+                          const platform = MethodChannel('com.display.switcher/task');
+                          platform.invokeMethod('showRearClock');
+                        } catch (e) {
+                          _showSnackBar('Không thể mở đồng hồ: $e');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNavRow(
+                      icon: '🎵',
+                      title: 'Điều khiển nhạc',
+                      subtitle: 'Play/Pause/Next trên màn hình sau',
+                      onTap: () {
+                        try {
+                          const platform = MethodChannel('com.display.switcher/task');
+                          platform.invokeMethod('showRearMedia');
+                        } catch (e) {
+                          _showSnackBar('Không thể mở media: $e');
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNavRow(
+                      icon: '⚡',
+                      title: 'Tùy chỉnh hoạt ảnh sạc',
+                      subtitle: '4 kiểu: Tia sét, Sóng, Nhịp, Tối giản',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChargingSettingsPage(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildNavRow(
+                      icon: '🔄',
+                      title: 'Tự động chuyển',
+                      subtitle: 'Tự chuyển app khi sạc/mở app/bật màn hình',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AutoSwitchRulesPage(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
                 // === Sao lưu (Backup) ===
                 _buildSectionTitle('💾 Sao lưu'),
                 const SizedBox(height: 12),
@@ -139,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                               Text(
-                                'Phiên bản 3.4.1 (build 12)',
+                                'Phiên bản 3.6.0 (build 14)',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.black54,
@@ -149,6 +213,13 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildNavRow(
+                      icon: '🔄',
+                      title: 'Kiểm tra cập nhật',
+                      subtitle: 'Kiểm tra bản mới trên GitHub',
+                      onTap: _checkUpdate,
                     ),
                     const SizedBox(height: 16),
                     const Divider(color: Colors.black26, height: 1),
@@ -374,6 +445,100 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // === Action handlers ===
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  Widget _buildNavRow({
+    required String icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(SquircleRadii.small),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          child: Row(
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.black38),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _checkUpdate() async {
+    _showSnackBar('Đang kiểm tra cập nhật...');
+    try {
+      final update = await UpdateChecker.check('3.6.0');
+      if (update == null) {
+        _showSnackBar('Bạn đang dùng phiên bản mới nhất');
+      } else {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Có bản cập nhật v${update.version}'),
+              content: Text(
+                'Kích thước: ${update.sizeLabel}\n\n'
+                '${update.releaseNotes.split('\n').take(10).join('\n')}',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Để sau'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // Could open browser with update.releaseUrl
+                  },
+                  child: const Text('Tải xuống'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      _showSnackBar('Kiểm tra cập nhật thất bại: $e');
+    }
+  }
 
   Future<void> _exportSettings() async {
     try {
