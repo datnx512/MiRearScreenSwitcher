@@ -913,6 +913,111 @@ public class MainActivity extends FlutterActivity {
                         break;
                     }
                     
+                    case "showRearMedia": {
+                        // Launch the RearScreenMediaActivity (media controller) on
+                        // the rear screen using the same launch pattern as the clock.
+                        startMediaOnRearScreen();
+                        result.success(true);
+                        break;
+                    }
+                    
+                    case "checkRootAccess": {
+                        try {
+                            boolean hasRoot = RootCommandService.hasRootAccess();
+                            result.success(hasRoot);
+                        } catch (Exception e) {
+                            Log.e(TAG, "checkRootAccess error: " + e.getMessage(), e);
+                            result.success(false);
+                        }
+                        break;
+                    }
+                    
+                    case "executeRootCommand": {
+                        try {
+                            String command = call.argument("command");
+                            if (command == null || command.isEmpty()) {
+                                result.error("INVALID_ARGUMENT", "command argument is required", null);
+                                break;
+                            }
+                            String output = RootCommandService.execute(command);
+                            result.success(output);
+                        } catch (Exception e) {
+                            Log.e(TAG, "executeRootCommand error: " + e.getMessage(), e);
+                            result.error("ERROR", e.getMessage(), null);
+                        }
+                        break;
+                    }
+
+                    case "startAutoSwitch": {
+                        // Start the AutoSwitchService foreground service.
+                        try {
+                            Intent intent = new Intent(this, AutoSwitchService.class);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(intent);
+                            } else {
+                                startService(intent);
+                            }
+                            Log.d(TAG, "AutoSwitchService started");
+                            result.success(true);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to start AutoSwitchService", e);
+                            result.error("ERROR", e.getMessage(), null);
+                        }
+                        break;
+                    }
+
+                    case "stopAutoSwitch": {
+                        // Stop the AutoSwitchService foreground service.
+                        try {
+                            Intent intent = new Intent(this, AutoSwitchService.class);
+                            stopService(intent);
+                            Log.d(TAG, "AutoSwitchService stopped");
+                            result.success(true);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to stop AutoSwitchService", e);
+                            result.error("ERROR", e.getMessage(), null);
+                        }
+                        break;
+                    }
+
+                    case "setAutoSwitchRule": {
+                        // Persist an auto-switch rule to SharedPreferences.
+                        // Arguments:
+                        //   ruleType  : "app_open" | "charging" | "rear_screen_on"
+                        //   apps      : List<String> (for app_open) — package names to auto-switch
+                        //   targetApp : String (for charging / rear_screen_on) — single target package
+                        try {
+                            String ruleType = (String) call.argument("ruleType");
+                            SharedPreferences prefs = getSharedPreferences("auto_switch_rules", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = prefs.edit();
+
+                            if ("app_open".equals(ruleType)) {
+                                java.util.List<String> apps = (java.util.List<String>) call.argument("apps");
+                                if (apps == null) {
+                                    apps = new java.util.ArrayList<>();
+                                }
+                                editor.putStringSet("rule_app_open", new java.util.HashSet<>(apps));
+                            } else if ("charging".equals(ruleType)) {
+                                String targetApp = (String) call.argument("targetApp");
+                                editor.putString("target_charging", targetApp != null ? targetApp : "");
+                            } else if ("rear_screen_on".equals(ruleType)) {
+                                String targetApp = (String) call.argument("targetApp");
+                                editor.putString("target_rear_screen_on", targetApp != null ? targetApp : "");
+                            } else {
+                                result.error("ERROR", "Unknown ruleType: " + ruleType, null);
+                                return;
+                            }
+
+                            editor.apply();
+                            Log.d(TAG, "Auto-switch rule saved: " + ruleType);
+                            result.success(true);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to save auto-switch rule", e);
+                            result.error("ERROR", e.getMessage(), null);
+                        }
+                        break;
+                    }
+
                     default:
                         result.notImplemented();
                 }
@@ -997,6 +1102,77 @@ public class MainActivity extends FlutterActivity {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to show clock on rear screen", e);
+            }
+        }).start();
+    }
+
+    /**
+     * Launch RearScreenMediaActivity (media controller) on the rear screen
+     * (display 1). Mirrors startClockOnRearScreen(): disable the official
+     * sub-screen launcher, wake the rear screen, start the activity, then
+     * move its task to display 1 via the activity_task service.
+     */
+    private void startMediaOnRearScreen() {
+        if (taskService == null) {
+            Log.w(TAG, "TaskService not available for media");
+            // Fallback: plain start (will appear on current display)
+            try {
+                Intent intent = new Intent(this, RearScreenMediaActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to start media activity (fallback)", e);
+            }
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                // Step 1: disable the official sub-screen launcher
+                taskService.disableSubScreenLauncher();
+
+                // Step 2: wake the rear screen
+                taskService.executeShellCommand("input -d 1 keyevent KEYCODE_WAKEUP");
+                Thread.sleep(50);
+
+                // Step 3: start the media activity
+                String componentName = getPackageName() + "/" + RearScreenMediaActivity.class.getName();
+                String startCmd = "am start -n " + componentName;
+                taskService.executeShellCommand(startCmd);
+
+                // Step 4: poll for the task id
+                String mediaTaskId = null;
+                int attempts = 0;
+                int maxAttempts = 20;
+
+                while (mediaTaskId == null && attempts < maxAttempts) {
+                    Thread.sleep(30);
+                    String res = taskService.executeShellCommandWithResult(
+                        "am stack list | grep RearScreenMediaActivity");
+                    if (res != null && !res.trim().isEmpty()) {
+                        java.util.regex.Pattern pattern =
+                            java.util.regex.Pattern.compile("taskId=(\\d+)");
+                        java.util.regex.Matcher matcher = pattern.matcher(res);
+                        if (matcher.find()) {
+                            mediaTaskId = matcher.group(1);
+                            Log.d(TAG, "Found media taskId=" + mediaTaskId);
+                            break;
+                        }
+                    }
+                    attempts++;
+                }
+
+                // Step 5: move the task to display 1 (rear screen)
+                if (mediaTaskId != null) {
+                    String moveCmd = "service call activity_task 50 i32 " + mediaTaskId + " i32 1";
+                    taskService.executeShellCommand(moveCmd);
+                    Thread.sleep(40);
+                    Log.d(TAG, "✅ Media controller started on rear screen");
+                } else {
+                    Log.e(TAG, "❌ Failed to find media taskId");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to show media on rear screen", e);
             }
         }).start();
     }

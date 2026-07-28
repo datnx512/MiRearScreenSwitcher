@@ -156,7 +156,18 @@
                 android:value="背屏录屏服务"/>
         </service>
 
-        
+        <!-- Auto-Switch Rules Service: monitors events and auto-switches apps to rear screen -->
+        <service
+            android:name=".AutoSwitchService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="自动切换背屏服务"/>
+        </service>
+
+
         <!-- 背屏唤醒Activity（已废弃，改用Service） -->
         <activity
             android:name=".RearScreenWakeActivity"
@@ -217,6 +228,22 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:taskAffinity="com.tgwgroup.MiRearScreenSwitcher.clock"
+            android:theme="@style/Theme.Transparent"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode|smallestScreenSize|density"
+            android:directBootAware="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:hardwareAccelerated="true">
+            <meta-data android:name="miui.rear.policy" android:value="miui"/>
+        </activity>
+            
+        <!-- Rear Screen Media Controller Activity (media playback overlay) -->
+        <activity
+            android:name=".RearScreenMediaActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.tgwgroup.MiRearScreenSwitcher.media"
             android:theme="@style/Theme.Transparent"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode|smallestScreenSize|density"
             android:directBootAware="true"
