@@ -313,7 +313,9 @@ public class RearScreenChargingActivity extends Activity {
                 // 步骤2: 等待200ms让系统稳定（增加延迟）
                 try {
                     Thread.sleep(200);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                    Log.e(TAG, "Sleep interrupted while waiting for system to stabilize", ignored);
+                }
                 
                 // 步骤3: 移动投送app回到背屏
                 taskService.executeShellCommand(
@@ -323,7 +325,9 @@ public class RearScreenChargingActivity extends Activity {
                 // 步骤4: 再等待200ms确保app已移动
                 try {
                     Thread.sleep(200);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                    Log.e(TAG, "Sleep interrupted while ensuring app moved to rear screen", ignored);
+                }
                 
                 // 步骤5: 再次确认移动（双重保险）
                 taskService.executeShellCommand(
@@ -333,7 +337,9 @@ public class RearScreenChargingActivity extends Activity {
                 // 步骤6: 等待300ms让app完全显示
                 try {
                     Thread.sleep(300);
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                    Log.e(TAG, "Sleep interrupted while waiting for app to fully display", ignored);
+                }
                 
                 // 步骤7: 不启用官方Launcher（保持禁用状态，让投送app继续占据背屏）
                 // taskService.enableSubScreenLauncher(); // ❌ 不要启用，否则会抢占背屏

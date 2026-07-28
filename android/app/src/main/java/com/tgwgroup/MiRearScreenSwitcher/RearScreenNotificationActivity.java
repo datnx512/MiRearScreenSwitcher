@@ -228,7 +228,9 @@ public class RearScreenNotificationActivity extends Activity {
                                 tsWake.executeShellCommand("// 主屏唤醒功能已移除");
                                 Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
                             }
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable ignored) {
+                            Log.e(TAG, "Failed to wake main screen via TaskService", ignored);
+                        }
                         startActivity(launchIntent, opts.toBundle());
                         started = true;
                         Log.d(TAG, String.format("[%tT.%tL] ✓ ActivityOptions主屏启动成功", clickTime, clickTime));
@@ -263,7 +265,9 @@ public class RearScreenNotificationActivity extends Activity {
                                 try {
                                     ts.executeShellCommand("// 主屏唤醒功能已移除");
                                     Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
-                                } catch (Throwable ignored) {}
+                                } catch (Throwable ignored) {
+                                    Log.e(TAG, "Failed to wake main screen via TaskService fallback", ignored);
+                                }
                                 String cmd = "am start --display 0 -n " + component;
                                 boolean ok = ts.executeShellCommand(cmd);
                                 if (!ok) {
@@ -524,7 +528,9 @@ public class RearScreenNotificationActivity extends Activity {
                                         tsWake.executeShellCommand("// 主屏唤醒功能已移除");
                                         Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
                                     }
-                                } catch (Throwable ignored) {}
+                                } catch (Throwable ignored) {
+                                    Log.e(TAG, "Failed to wake main screen via TaskService", ignored);
+                                }
                                 startActivity(launchIntent, opts.toBundle());
                                 started = true;
                                 Log.d(TAG, String.format("[%tT.%tL] ✓ ActivityOptions主屏启动成功", clickTime, clickTime));
@@ -559,7 +565,9 @@ public class RearScreenNotificationActivity extends Activity {
                                         try {
                                             ts.executeShellCommand("// 主屏唤醒功能已移除");
                                             Log.d(TAG, String.format("[%tT.%tL] ✓ 已唤醒主屏", clickTime, clickTime));
-                                        } catch (Throwable ignored) {}
+                                        } catch (Throwable ignored) {
+                                            Log.e(TAG, "Failed to wake main screen via TaskService fallback", ignored);
+                                        }
                                         String cmd = "am start --display 0 -n " + component;
                                         boolean ok = ts.executeShellCommand(cmd);
                                         if (!ok) {

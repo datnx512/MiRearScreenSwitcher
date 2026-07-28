@@ -47,6 +47,7 @@ public class MyApplication extends FlutterApplication {
                 hiddenApiBypass.getMethod("addHiddenApiExemptions", String.class)
                     .invoke(null, "L");
             } catch (Exception e) {
+                Log.e(TAG, "Failed to apply HiddenApiBypass exemption", e);
             }
         }
     }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MRSS</string>
+    <string name="tile_label">Chuyển sang màn hình sau</string>
+    <string name="tile_screenshot_label">Chụp màn hình sau</string>
+    <string name="tile_record_label">Quay màn hình sau</string>
+    <string name="uninstall_title">😭Bạn thực sự muốn gỡ MRSS chứ?😭\n😭Bạn thực sự muốn gỡ MRSS chứ?😭\n😭Bạn thực sự muốn gỡ MRSS chứ?😭\n</string>
+    <string name="uninstall_content">\n\n\n😭Hãy trở lại đi MRSS😭\n🌟Niềm tự hào lớn nhất của tôi🌟\n⚡️Những khoảnh khắc màn hình sau vẫn rõ mồn một⚡️\n😭Nước mắt tuôn trào vô cớ😭\n💥Vẫn nhớ app chiếu lên màn hình sau💥\n👍Cùng những công cụ đỉnh cao (Tác giả ghi chú: chỉ am force-stop)👍\n⚡️Đánh bại cả Xiaomi SubScreenCenter⚡️\n✨Thức trắng đêm không mệt✨\n\n\n</string>
+    <string name="privacy_mode_enabled">Đã bật chế độ riêng tư</string>
+    <string name="new_message_placeholder">Bạn có một tin nhắn mới</string>
+    <string name="toast_cast_to_rear">Đã chiếu sang màn hình sau</string>
+    <string name="toast_switch_failed">Chuyển thất bại</string>
+    <string name="toast_return_to_main">Đã trở về màn hình chính</string>
+    <string name="toast_not_on_rear">Ứng dụng không ở màn hình sau</string>
+    <string name="toast_app_not_found">Không tìm thấy ứng dụng để kéo về</string>
+    <string name="toast_screenshot_saved">Đã lưu ảnh chụp màn hình sau</string>
+    <string name="toast_please_switch_back">Vui lòng chuyển %s về màn hình chính trước</string>
+    <string name="notif_kernel_service">Dịch vụ lõi MRSS</string>
+    <string name="notif_running_on_rear">Đang chạy ở màn hình sau</string>
+    <string name="notif_click_to_return">Chạm để chuyển %s về màn hình chính</string>
+    <string name="notif_mrss_running">MRSS hiện đang chạy</string>
+</resources>

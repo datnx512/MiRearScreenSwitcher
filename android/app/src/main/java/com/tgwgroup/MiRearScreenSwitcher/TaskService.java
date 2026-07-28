@@ -535,7 +535,7 @@ public class TaskService extends ITaskService.Stub {
 
                             }
                         } catch (NumberFormatException e) {
-
+                            Log.e(TAG, "Failed to parse DPI value from density output", e);
                         }
                     }
                 }
@@ -789,7 +789,9 @@ public class TaskService extends ITaskService.Stub {
                     String[] parts = currentApp.split(":");
                     try {
                         currentTaskId = Integer.parseInt(parts[1]);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                        Log.e(TAG, "Failed to parse taskId from currentApp: " + currentApp, ignored);
+                    }
                 }
             }
             
@@ -864,7 +866,9 @@ public class TaskService extends ITaskService.Stub {
                 if (parts.length >= 2) {
                     try {
                         return Integer.parseInt(parts[1]);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                        Log.e(TAG, "Failed to parse rotation from wm user-rotation output: " + line, ignored);
+                    }
                 }
             }
             

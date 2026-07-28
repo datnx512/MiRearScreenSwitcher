@@ -122,6 +122,7 @@ public class RearScreenshotTileService extends TileService {
                         taskService.collapseStatusBar();
                         Thread.sleep(300);
                     } catch (Exception ignored) {
+                        Log.e(TAG, "Failed to collapse status bar after screenshot", ignored);
                     }
 
                     // 显示Toast提示
