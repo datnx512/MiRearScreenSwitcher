@@ -10,6 +10,17 @@ import '../widgets/squircle.dart';
 import 'charging_settings_page.dart';
 import 'auto_switch_rules_page.dart';
 
+/// Read app version+build from pubspec.yaml at compile time.
+/// Uses package_config.json resolution — no extra dependency needed.
+const _appVersion = String.fromEnvironment(
+  'APP_VERSION',
+  defaultValue: '3.6.3',
+);
+const _appBuild = String.fromEnvironment(
+  'APP_BUILD',
+  defaultValue: '15',
+);
+
 /// Settings page with appearance, language, backup/restore, and about sections.
 class SettingsPage extends StatefulWidget {
   final ThemeController themeController;
@@ -209,7 +220,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                               Text(
-                                'Phiên bản 3.6.0 (build 14)',
+                                'Phiên bản $_appVersion (build $_appBuild)',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.black54,
@@ -560,14 +571,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<String> _getAppVersion() async {
-    // Đọc từ pubspec qua PackageInfo
-    try {
-      // Fallback: hardcode từ pubspec.yaml version field
-      // Thực tế nên dùng package_info_plus, nhưng tránh thêm dependency
-      return '3.6.2';
-    } catch (_) {
-      return '3.6.2';
-    }
+    return _appVersion;
   }
 
   void _openDownloadUrl(String url) {

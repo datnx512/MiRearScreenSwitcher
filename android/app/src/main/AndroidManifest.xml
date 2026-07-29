@@ -17,7 +17,10 @@
     <!-- 通知权限 (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- 查询所有应用包权限 (Android 11+，用于通知功能选择应用) -->
+    <!-- Query all packages (notification feature) -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    <!-- Internet permission (update checker) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     
     <application
         android:label="MRSS"
