@@ -921,6 +921,21 @@ public class MainActivity extends FlutterActivity {
                         break;
                     }
                     
+                    case "openUrl": {
+                        try {
+                            String url = call.argument("url");
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setData(android.net.Uri.parse(url));
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                            result.success(null);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to open URL", e);
+                            result.error("ERROR", "Failed to open URL: " + e.getMessage(), null);
+                        }
+                        break;
+                    }
+
                     case "checkRootAccess": {
                         try {
                             boolean hasRoot = RootCommandService.hasRootAccess();

@@ -6,44 +6,43 @@ class UpdateChecker {
   static const String _repoUrl =
       'https://api.github.com/repos/datnx512/MiRearScreenSwitcher/releases/latest';
 
-  /// Check for updates. Returns UpdateInfo if newer version available, null otherwise.
+  /// Check for updates. Returns UpdateInfo if newer version available, null if up-to-date.
+  /// Throws on network/parse error so caller can show proper error message.
   static Future<UpdateInfo?> check(String currentVersion) async {
-    try {
-      final response = await http.get(
-        Uri.parse(_repoUrl),
-        headers: {'Accept': 'application/vnd.github+json'},
-      ).timeout(const Duration(seconds: 10));
+    final response = await http.get(
+      Uri.parse(_repoUrl),
+      headers: {'Accept': 'application/vnd.github+json'},
+    ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode != 200) return null;
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final tagName = data['tag_name'] as String? ?? '';
-      final cleanTag = tagName.startsWith('v') ? tagName.substring(1) : tagName;
-
-      if (_isNewer(cleanTag, currentVersion)) {
-        final assets = data['assets'] as List<dynamic>?;
-        String? downloadUrl;
-        int? downloadSize;
-
-        if (assets != null && assets.isNotEmpty) {
-          final asset = assets[0] as Map<String, dynamic>;
-          downloadUrl = asset['browser_download_url'] as String?;
-          downloadSize = asset['size'] as int?;
-        }
-
-        return UpdateInfo(
-          version: cleanTag,
-          releaseUrl: data['html_url'] as String? ?? '',
-          downloadUrl: downloadUrl,
-          downloadSize: downloadSize,
-          releaseNotes: data['body'] as String? ?? '',
-          publishedAt: data['published_at'] as String? ?? '',
-        );
-      }
-      return null;
-    } catch (_) {
-      return null;
+    if (response.statusCode != 200) {
+      throw Exception('GitHub API trả về ${response.statusCode}');
     }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final tagName = data['tag_name'] as String? ?? '';
+    final cleanTag = tagName.startsWith('v') ? tagName.substring(1) : tagName;
+
+    if (_isNewer(cleanTag, currentVersion)) {
+      final assets = data['assets'] as List<dynamic>?;
+      String? downloadUrl;
+      int? downloadSize;
+
+      if (assets != null && assets.isNotEmpty) {
+        final asset = assets[0] as Map<String, dynamic>;
+        downloadUrl = asset['browser_download_url'] as String?;
+        downloadSize = asset['size'] as int?;
+      }
+
+      return UpdateInfo(
+        version: cleanTag,
+        releaseUrl: data['html_url'] as String? ?? '',
+        downloadUrl: downloadUrl,
+        downloadSize: downloadSize,
+        releaseNotes: data['body'] as String? ?? '',
+        publishedAt: data['published_at'] as String? ?? '',
+      );
+    }
+    return null;
   }
 
   /// Compare semantic versions. Returns true if remote > local.

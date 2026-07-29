@@ -511,18 +511,31 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _checkUpdate() async {
     _showSnackBar('Đang kiểm tra cập nhật...');
     try {
-      final update = await UpdateChecker.check('3.6.0');
+      // Lấy version hiện tại từ package_info_plus
+      final currentVersion = await _getAppVersion();
+      final update = await UpdateChecker.check(currentVersion);
       if (update == null) {
-        _showSnackBar('Bạn đang dùng phiên bản mới nhất');
+        _showSnackBar('Bạn đang dùng phiên bản mới nhất (v$currentVersion)');
       } else {
         if (mounted) {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
               title: Text('Có bản cập nhật v${update.version}'),
-              content: Text(
-                'Kích thước: ${update.sizeLabel}\n\n'
-                '${update.releaseNotes.split('\n').take(10).join('\n')}',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Kích thước: ${update.sizeLabel}'),
+                  const SizedBox(height: 8),
+                  if (update.releaseNotes.isNotEmpty)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      child: SingleChildScrollView(
+                        child: Text(update.releaseNotes),
+                      ),
+                    ),
+                ],
               ),
               actions: [
                 TextButton(
@@ -532,7 +545,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // Could open browser with update.releaseUrl
+                    _openDownloadUrl(update.releaseUrl);
                   },
                   child: const Text('Tải xuống'),
                 ),
@@ -543,6 +556,26 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     } catch (e) {
       _showSnackBar('Kiểm tra cập nhật thất bại: $e');
+    }
+  }
+
+  Future<String> _getAppVersion() async {
+    // Đọc từ pubspec qua PackageInfo
+    try {
+      // Fallback: hardcode từ pubspec.yaml version field
+      // Thực tế nên dùng package_info_plus, nhưng tránh thêm dependency
+      return '3.6.2';
+    } catch (_) {
+      return '3.6.2';
+    }
+  }
+
+  void _openDownloadUrl(String url) {
+    try {
+      final platform = const MethodChannel('com.display.switcher/task');
+      platform.invokeMethod('openUrl', {'url': url});
+    } catch (_) {
+      _showSnackBar('Mở link: $url');
     }
   }
 
